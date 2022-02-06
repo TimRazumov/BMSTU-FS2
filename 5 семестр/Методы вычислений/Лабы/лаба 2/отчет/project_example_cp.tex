@@ -1,0 +1,97 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[cp1251]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+\usepackage{hyperref}
+
+
+\usepackage[footnotes,oglav,spisok,boldsect,eqwhole,figwhole,kursrab,remarks,hyperprint,greekup]{project_cp}
+
+\begin{document}
+\cover{Методы вычислений}{Итерационные методы решения систем линейных алгебраических уравнений}{студенты группы ФН2-51}{Разумов Т.Е.}{}{Швечков И.В.}{}{}{2017}
+
+
+
+
+
+\newpage
+
+\section-{Контрольные вопросы}
+
+\begin{itemize}
+
+\item[\sffamily 1.] Почему условие $||C||$ гарантирует сходимость итерационных методов?
+
+\item[\sffamily 2.] Каким следует выбрать итерационный параметр $\tau$ в методе простой итерации для увеличения скорости сходимости?
+	   Как выбрать начальное приближние $ x^0?$ 
+
+\item[\sffamily 3.] На примере системы из двух уравнений с двумя неизвестными дайте геометрическую интерпретацию метода метода
+Якоби, метода Зейделя, метода релаксации.
+
+\item[\sffamily 4.] При каких условиях сходятся метод простой итерации, метод Якоби, метод Зейделя и метод релаксации? Какую матрицу называют положительно определенной?
+
+\item[\sffamily 5.] Выпишите матрицу $C$ для методов Зейделя и релаксации.
+
+\item[\sffamily 6.]Почему в общем случае для остановки итерационного процесса нельзя использовать критерий
+ $\parallel x^k-x^{k-1}\parallel<\varepsilon$ ?
+
+\item[\sffamily 7*.] Какие еще критерии окончания итерационного процесса Вы можете предложить?
+
+
+\end{itemize}
+
+
+\newpage
+
+
+\section-{Ответы на контрольные вопросы}
+
+\begin{itemize}
+
+\item[\sffamily 1.] Пусть $||C||<1$. Вычтем из равенства $x^{x+1}=Cx^k+y$ равенство $x=Cx+y$, получим 
+\[x^{k+1}-x=C(x^k-x)\Rightarrow ||x^{k+1}-x||=||C(x^k-x)||\leqslant||C||||x^k-x||,\]
+так как это неравентсво верно $\forall k\geqslant 0\Rightarrow$
+\[||x^{n}-x||\leqslant||C||||x^{n-1}-x||\leqslant||C||^2||x^{n-2}-x||\leqslant\dots\leqslant||C||^n||x^0-x||.\]
+Так как  $||x^0-x||=const\geqslant 0$ не зависит от $n$, $||C||^n\to 0$ при $n\to\infty$, то $||x^{n}-x||\to 0$ при $n\to\infty$.
+
+\item[\sffamily 2.] Метод простой итетрации сходится при  $\tau<\frac{2}{\lambda_{max}}$. Итерационный процесс $x^{k+1}=Cx^k+y$ сходится к решению $Ax=f$ каково бы ни было начальное приближение тогда и только тогда, когда $\rho(C)<1$, из оценки $||x^{n}-x||\leqslant||C||^n||x^0-x||$ следует, что начальное приближение $x^0$ желательно выбрать наиболее близким к точному решению. $\tau_\text{опт}=\frac{2}{\lambda_{max}+\lambda_{min}}$.
+
+\item[\sffamily 3.] 
+\[\]
+\begin{center}
+\figbox{10cm}{7cm}{yakobi.jpg}{}[Метод Якоби.]
+\figbox{10cm}{7cm}{relax1-.jpg}{}[Метод Релаксации при $\omega<1$.]
+\figbox{10cm}{7cm}{relax1+.jpg}{}[Метод Релаксации при $\omega>1$.]
+\figbox{10cm}{7cm}{zeidel.jpg}{}[Метод Зейделя.]
+\end{center}
+
+\item[\sffamily 4.] Если $A$ - симметричная положительно определенная матрица, $\tau>0$ и выполнено неравенство
+\[B-0,5\tau A>0.\]
+Тогда стационарный итерационный метод
+\[B\frac{x_{k+1}-x_k}{\tau}+Ax_k=f\]
+сходится. \\Если к условию симметричности и положительной определенности матрицы $A$ добавить условие диагонального преобладания, то метод Якоби сходится. \\Метод верхней релаксации сходится при симметричности и положительно определенности матрицы $A$ и $\omega\in(0,2)$. \\Матрица $A$ называется положительно определенной, если $(Ax,x)>0 \,\,\forall x\ne 0$.
+
+\item[\sffamily 5.] Выпишем матрицу $С$ для метода релаксации:
+\[(D+\omega L)\frac{(x^{k+1}-x^k)}{\omega}+Ax^k=b,\]
+\[(D+\omega L)\frac{x^{k+1}}{\omega}+\biggl(-\frac{D+\omega L}{\omega}+A\biggr)x^k=b,\]
+\[(D+\omega L)x^{k+1}=(D+\omega L-\omega A)x^k+\omega b,\]
+\[x^{k+1}=(D+\omega L)^{-1}(D+\omega L-\omega A)x^k+\omega(D+\omega L)^{-1} b\Rightarrow  C=(D+\omega L)^{-1}(D+\omega L-\omega A).\]
+Или, если предстваить матрицу $A$ в виде: $A=L+D+U$, то \[C=(D+\omega L)^{-1}((1-\omega)D-\omega U).\]
+Для метода Зейделя $(\omega=1)$:
+\[x^{k+1}=(D+L)^{-1}(D+L-A)x^k+(D+L)^{-1} b\Rightarrow  C=(D+L)^{-1}(D+L-A).\]
+Или, если предстваить матрицу $A$ в виде: $A=L+D+U$, то $C=-(D+L)^{-1}U$.
+\item[\sffamily 6.] Потому что указанное условние прерывание итерационного процесса оперирует не нормой погрешности численного решения, а нормами его изменения за одну итерацию. Иногда это приводит к неверному заключению о сходимости метода, если, например, метод очень медленно сходится.
+
+\item[\sffamily 7*.] 
+ \[\parallel x_k-x_{k-1}\parallel<\varepsilon\parallel x_k\parallel+\varepsilon_0,\]
+ \[\biggl|\biggl|\frac{ x_k-x_{k-1}}{\parallel x_k\parallel+\varepsilon_0}\biggr|\biggr| <\varepsilon,\]
+ \[||Ax_{k+1}-f|| <\varepsilon,\]
+\[\parallel x_k-x_{k-1}\parallel<\frac{1-||C||}{||C||}\varepsilon.\]
+Так же для метода Зейделя:\[\parallel x_k-x_{k-1}\parallel<\frac{1-||C||}{||C_U||}\varepsilon.\]
+
+\end{itemize}
+
+
+\end{document}

@@ -1,0 +1,135 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      4023,        126]
+NotebookOptionsPosition[      3529,        104]
+NotebookOutlinePosition[      3869,        119]
+CellTagsIndexPosition[      3826,        116]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"A", "=", 
+   RowBox[{"Table", "[", 
+    RowBox[{
+     RowBox[{"i", "+", "j"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"i", ",", "0", ",", "7"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"j", ",", "0", ",", "7"}], "}"}]}], "]"}]}], ";"}]], "Input",
+ CellChangeTimes->{{3.7503363253762007`*^9, 3.750336404477719*^9}}],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"B", "=", "A"}], ";"}]], "Input",
+ CellChangeTimes->{{3.7503364081341333`*^9, 3.7503364101547503`*^9}}],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"MatrixForm", "[", 
+  RowBox[{"A", ".", "B"}], "]"}]], "Input",
+ CellChangeTimes->{{3.750336412123443*^9, 3.750336428949176*^9}}],
+
+Cell[BoxData[
+ TagBox[
+  RowBox[{"(", "\[NoBreak]", GridBox[{
+     {"140", "168", "196", "224", "252", "280", "308", "336"},
+     {"168", "204", "240", "276", "312", "348", "384", "420"},
+     {"196", "240", "284", "328", "372", "416", "460", "504"},
+     {"224", "276", "328", "380", "432", "484", "536", "588"},
+     {"252", "312", "372", "432", "492", "552", "612", "672"},
+     {"280", "348", "416", "484", "552", "620", "688", "756"},
+     {"308", "384", "460", "536", "612", "688", "764", "840"},
+     {"336", "420", "504", "588", "672", "756", "840", "924"}
+    },
+    GridBoxAlignment->{
+     "Columns" -> {{Center}}, "ColumnsIndexed" -> {}, "Rows" -> {{Baseline}}, 
+      "RowsIndexed" -> {}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[0.7]}, 
+        Offset[0.27999999999999997`]}, "ColumnsIndexed" -> {}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}, "RowsIndexed" -> {}}], "\[NoBreak]", ")"}],
+  Function[BoxForm`e$, 
+   MatrixForm[BoxForm`e$]]]], "Output",
+ CellChangeTimes->{3.750336429452916*^9}]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"MatrixForm", "[", "B", "]"}]], "Input",
+ CellChangeTimes->{{3.750493232326168*^9, 3.7504932377940474`*^9}}],
+
+Cell[BoxData[
+ TagBox[
+  RowBox[{"(", "\[NoBreak]", GridBox[{
+     {"0", "1", "2", "3", "4", "5", "6", "7"},
+     {"1", "2", "3", "4", "5", "6", "7", "8"},
+     {"2", "3", "4", "5", "6", "7", "8", "9"},
+     {"3", "4", "5", "6", "7", "8", "9", "10"},
+     {"4", "5", "6", "7", "8", "9", "10", "11"},
+     {"5", "6", "7", "8", "9", "10", "11", "12"},
+     {"6", "7", "8", "9", "10", "11", "12", "13"},
+     {"7", "8", "9", "10", "11", "12", "13", "14"}
+    },
+    GridBoxAlignment->{
+     "Columns" -> {{Center}}, "ColumnsIndexed" -> {}, "Rows" -> {{Baseline}}, 
+      "RowsIndexed" -> {}},
+    GridBoxSpacings->{"Columns" -> {
+        Offset[0.27999999999999997`], {
+         Offset[0.7]}, 
+        Offset[0.27999999999999997`]}, "ColumnsIndexed" -> {}, "Rows" -> {
+        Offset[0.2], {
+         Offset[0.4]}, 
+        Offset[0.2]}, "RowsIndexed" -> {}}], "\[NoBreak]", ")"}],
+  Function[BoxForm`e$, 
+   MatrixForm[BoxForm`e$]]]], "Output",
+ CellChangeTimes->{{3.7504932221439624`*^9, 3.7504932384024878`*^9}}]
+}, Open  ]]
+},
+WindowSize->{759, 601},
+WindowMargins->{{8, Automatic}, {6, Automatic}},
+FrontEndVersion->"10.2 for Microsoft Windows (64-bit) (July 29, 2015)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 355, 10, 48, "Input"],
+Cell[916, 32, 137, 3, 31, "Input"],
+Cell[CellGroupData[{
+Cell[1078, 39, 152, 3, 48, "Input"],
+Cell[1233, 44, 1097, 24, 132, "Output"]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[2367, 73, 131, 2, 48, "Input"],
+Cell[2501, 77, 1012, 24, 146, "Output"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)

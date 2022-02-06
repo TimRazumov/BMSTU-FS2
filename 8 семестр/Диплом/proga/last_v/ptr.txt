@@ -1,0 +1,1030 @@
+#include <iostream>
+#include <fstream>
+#include <typeinfo>
+#include <cmath>
+#include <string>
+#include <omp.h>
+
+#define NUM_TREADS 4
+
+using namespace std;
+
+const double EPSILON = 1e-8;   //константа сравнения с 0
+const double pi = 3.14159265;
+
+typedef double mytipe;  //тип данных, использующийся во всей программе
+
+typedef mytipe(*Fanc)(const mytipe, const mytipe);
+
+void vivod(const int dim, const mytipe* const b);
+
+void write_file(mytipe** S, mytipe** I, mytipe** R, int N1, int N2, int k);
+
+void read_file(mytipe** S, mytipe** I, mytipe** R, int N1, int N2, int k);
+
+mytipe* progon3d(int dim, mytipe* a, mytipe* b, mytipe* c, mytipe* d);
+
+
+mytipe It0(const mytipe x, const mytipe y)
+{
+	//mytipe a = pow(0.5, 15);
+	//mytipe b = pow(0.5, 2);
+	//return a*x*(10. - x)*x*(10. - x)*y*(10. - y)*y*(10. - y)*exp(-b*((x - 8.)*(x - 8.) + (y - 5.)*(y - 5.)));
+
+	//return 500.*x*(1. - x)*x*(1. - x)*y*(1. - y)*y*(1. - y);
+
+	//return 5000.*x*(1. - x)*x*(1. - x)*y*(1. - y)*y*(1. - y)*exp(-50.*((x - 0.2)*(x - 0.2) + (y - 0.5)*(y - 0.5)));/14.03
+	return 30000.*x*(1. - x)*x*(1. - x)*y*(1. - y)* y*(1. - y)*exp(-90. *((x - 0.3)*(x - 0.3) + (y - 0.2)*(y - 0.2)));
+
+	return 3600.*x*(1. - x)*x*(1. - x)*y*(1. - y)*y*(1. - y);
+}
+
+
+mytipe St0(const mytipe x, const mytipe y)
+{
+	//mytipe a = pow(0.5, 12); 
+	//mytipe b = pow(0.5, 2);
+	//return a*x*(10. - x)*x*(10. - x)*y*(10. - y)*y*(10. - y)*exp(-b*((x - 0.5)*(x - 0.5) + (y - 5.)*(y - 5.)));
+	return 35000.*x*(1. - x)*x*(1. - x)*y*(1. - y)*y*(1. - y)*exp(-15.*((x - 0.8)*(x - 0.8) + (y - 0.8)*(y - 0.8)));
+	//return 25000.*x*(1. - x)*x*(1. - x)*y*(1. - y)*y*(1. - y)*exp(-50.*((x - 0.8)*(x - 0.8) + (y - 0.5)*(y - 0.5)));//14.03
+
+	return 1800.*x*(1. - x)*x*(1. - x)*y*(1. - y)*y*(1. - y);
+}
+
+mytipe Rt0(const mytipe x, const mytipe y)
+{
+	return fabs(0);
+}
+
+mytipe Z (mytipe xi, mytipe yj, mytipe xk, mytipe ym)//интегральное ядро уравнения
+{
+	mytipe Z0 = 20., L0 = 0.15;//Z0 = 20 (14.03) // //Z0 = 12 (18.03)  // Z0 = 20 (22.03) L0 = 0.5
+	return Z0*exp(-sqrt((xi - xk)*(xi - xk) + (yj - ym)*(yj - ym)) / L0);
+}
+
+mytipe D (mytipe u)//коэффициент диффузии
+{
+	mytipe m = 5.;
+	mytipe D0 = 2.;
+	return  D0*exp(-1. / (m*m*u*u));
+}
+
+mytipe Integrate(const int Nx, const int Ny, mytipe hx, mytipe hy, mytipe** f);//двумерный метод центральных прямоугольников
+
+//нестационарный процесс
+void fractional_step(int N1, int N2, int K,//Кол-во узлов
+	mytipe h1, mytipe h2, mytipe tao,//Шаг
+	Fanc St0, Fanc It0, Fanc Rt0,//НУ 
+	mytipe Q //скорость вымирания
+);
+
+
+int main() {
+	setlocale(LC_ALL, "Russian"); //подключаем русский язык
+
+	mytipe L = 1.;//расчетной области
+	mytipe T = 1.;//Время
+
+	int N1 = 41;//11//101; //узлы
+	int N2 = 41;//11//101;
+
+	mytipe tao = 0.0001;//0.002;//0.0025;
+	int K = round(T / tao + 1.);
+
+	mytipe h1 = L / (N1 - 1);
+	mytipe h2 = L / (N2 - 1);
+
+	mytipe Q = 3.5;//скорость вымирания //Q = 2 (14.03,22.03) //Q = 10 (18.03)
+	
+	fractional_step(N1, N2, K, h1, h2, tao, St0, It0, Rt0, Q);
+
+	std::cout << "\nend:)";
+
+	cin.get();
+	return 0;
+}
+
+void read_file(mytipe** S, mytipe** I, mytipe** R, int N1, int N2, int k)
+{
+	ifstream f_S, f_I, f_R;    // создали переменную для записи в файл
+	string file_name = "S_layer_" + to_string(k) + ".dat";
+	f_S.open(file_name, ios::out);
+	file_name = "I_layer_" + to_string(k) + ".dat";
+	f_I.open(file_name, ios::out);
+	file_name = "R_layer_" + to_string(k) + ".dat";
+	f_R.open(file_name, ios::out);
+
+	for (int i = 0; i < N1; i++)
+		for (int j = 0; j < N2; j++) {
+			f_S >> S[i][j]; f_I >> I[i][j]; f_R >> R[i][j];
+		}
+
+	f_S.close(); f_S.clear();
+	f_I.close(); f_I.clear();
+	f_R.close(); f_R.clear();
+}
+
+void write_file(mytipe** S, mytipe** I, mytipe** R, int N1, int N2, int k)
+{
+	ofstream f_S, f_I, f_R;    // создали переменную для записи в файл
+	string file_name = "S_layer_" + to_string(k) + ".dat";
+	f_S.open(file_name);
+	file_name = "I_layer_" + to_string(k) + ".dat";
+	f_I.open(file_name);
+	file_name = "R_layer_" + to_string(k) + ".dat";
+	f_R.open(file_name);
+
+	for (int i = 0; i < N1; i++) {//запись в файл
+		for (int j = 0; j < N2; j++) { f_S << S[i][j] << " "; f_I << I[i][j] << " "; f_R << R[i][j] << " "; }
+		f_S << endl; f_I << endl; f_R << endl;
+	}
+
+	f_S.close(); f_S.clear();
+	f_I.close(); f_I.clear();
+	f_R.close(); f_R.clear();
+
+}
+
+void fractional_step(int N1, int N2, int K,//Кол-во узлов
+	mytipe h1, mytipe h2, mytipe tao,//Шаг
+	Fanc St0, Fanc It0, Fanc Rt0,//НУ 
+	mytipe Q //скорость вымирания
+)
+{
+	int freq = 10;//частота записи слоев в файл
+	int num_file = 1;//номер файла
+
+	mytipe t = 0.;//время
+	omp_set_num_threads(NUM_TREADS);//кол-во тредов, на которых ведется расчет
+
+	const mytipe L1 = (N1 - 1)*h1;
+	const mytipe L2 = (N2 - 1)*h2;
+
+	mytipe** S0 = new mytipe*[N1];//слой с прошлой итерации 
+	mytipe** S05 = new mytipe*[N1];//промежуточный слой
+	mytipe** S1 = new mytipe*[N1];//текущий слой
+	mytipe** Sp = new mytipe*[N1];//предиктор 
+	mytipe** Sc = new mytipe*[N1];//корректор 
+
+	mytipe** I0 = new mytipe*[N1];//слой с прошлой итерации 
+	mytipe** I05 = new mytipe*[N1];//промежуточный слой
+	mytipe** I1 = new mytipe*[N1];//текущий слой
+	mytipe** Ip = new mytipe*[N1];//предиктор 
+	mytipe** Ic = new mytipe*[N1];//корректор 
+
+	mytipe** R0 = new mytipe*[N1]; 
+	mytipe** R05 = new mytipe*[N1];
+	mytipe** R1 = new mytipe*[N1];
+	mytipe** Rp = new mytipe*[N1];//предиктор 
+	mytipe** Rc = new mytipe*[N1];//корректор 
+
+	mytipe** Int0 = new mytipe*[N1];
+	mytipe** Int1 = new mytipe*[N1];
+
+	for (int i = 0; i < N1; i++) {
+		S0[i] = new mytipe[N2];
+		S05[i] = new mytipe[N2];
+		I0[i] = new mytipe[N2];
+		I05[i] = new mytipe[N2];
+		R0[i] = new mytipe[N2]; 
+		R05[i] = new mytipe[N2];
+		Int0[i] = new mytipe[N2];
+		Int1[i] = new mytipe[N2];
+		Sp[i] = new mytipe [N2]; 
+		Sc[i] = new mytipe [N2]; 
+		Ip[i] = new mytipe[N2];
+		Ic[i] = new mytipe[N2];
+		Rp[i] = new mytipe[N2];
+		Rc[i] = new mytipe[N2];
+	};
+
+	//Коэффициенты для 1-го измерения
+	mytipe* diag1_1 = new mytipe[N1];
+	mytipe* diag2_1 = new mytipe[N1];
+	mytipe* diag3_1 = new mytipe[N1];
+	mytipe* right1_S = new mytipe[N1];
+	mytipe* right1_I = new mytipe[N1];
+	mytipe* right1_R = new mytipe[N1];
+
+	//Коэффициенты для 2-го измерения
+	mytipe* diag1_2 = new mytipe[N2];
+	mytipe* diag2_2 = new mytipe[N2];
+	mytipe* diag3_2 = new mytipe[N2];
+	mytipe* right2_S = new mytipe[N2];
+	mytipe* right2_I = new mytipe[N2];
+	mytipe* right2_R = new mytipe[N2];
+	mytipe* vspom;
+
+	//НУ
+	for (int i = 0; i < N1; i++)
+		for (int j = 0; j < N2; j++) { S0[i][j] = St0(i*h1, j*h2); I0[i][j] = It0(i*h1, j*h2);  R0[i][j] = Rt0(i*h1, j*h2); }
+	write_file(S0, I0, R0, N1, N2, 0);
+
+	//read_file(S0, I0, R0, N1, N2, num_file - 1);
+
+	//проверка консервативности
+	for (int i = 0; i < N1; i++) {
+		for (int j = 0; j < N2; j++) {
+			Sp[i][j] = S0[i][j] + I0[i][j] + R0[i][j];
+		}
+	}
+
+	mytipe N0 = Integrate(N1 - 1, N2 - 1, h1, h2, Sp);//Общая численность
+		
+	std::cout << "N0_init = " << N0 << endl;
+
+	for (int k = 1; k <= 4*600; k++) {
+		t -= omp_get_wtime();
+
+		//ПЕРВОЕ ИЗМЕРЕНИЕ
+#pragma omp parallel for shared(Int0)
+		for (int i = 0; i < N1; i++) { //  Z(i*h1, j*h2, n*h1, m*h2)
+			for (int j = 0; j < N2; j++) {
+				Int0[i][j] = 0.;
+				for (int n = 0; n < N1 - 1; n++) {
+					for (int m = 0; m < N2 - 1; m++) {
+						Int0[i][j] += 0.25*h1*h2*(Z(i*h1, j*h2, n*h1, m*h2)*I0[n][m] + Z(i*h1, j*h2, n*h1, (m + 1)*h2)*I0[n][m + 1]
+							+ Z(i*h1, j*h2, (n + 1)*h1, m*h2)*I0[n + 1][m] + Z(i*h1, j*h2, (n + 1)*h1, (m + 1)*h2)*I0[n + 1][m + 1]);
+					}
+				}
+				Int0[i][j] *= N0*S0[i][j];
+			}
+		}
+		//j = 0
+			diag1_1[0] = 0.;
+			diag3_1[0] = (D(R0[1][0]) + D(R0[0][0])) / (h1*h1);
+			diag2_1[0] =  - (diag3_1[0] + 2. / tao);
+
+			for (int i = 0; i < N1; i++) {
+				right1_S[i] = -(2. / tao*S0[i][0] 
+					+ (D(R0[i][1]) + D(R0[i][0])) / (h2*h2)*(S0[i][1] - S0[i][0]) 
+					- Int0[i][0]);
+				right1_I[i] = -(2. / tao*I0[i][0]
+					+ (D(R0[i][1]) + D(R0[i][0])) / (h2*h2)*(I0[i][1] - I0[i][0])
+					+ Int0[i][0] - Q*I0[i][0]);
+				right1_R[i] = -(2. / tao*R0[i][0]
+					+ (D(R0[i][1]) + D(R0[i][0])) / (h2*h2)*(R0[i][1] - R0[i][0])
+					+ Q*I0[i][0]);
+				if (i != N1 - 1 && i != 0) {
+					diag1_1[i] = 0.5*(D(R0[i][0]) + D(R0[i - 1][0])) / (h1*h1);
+					diag3_1[i] = 0.5*(D(R0[i + 1][0]) + D(R0[i][0])) / (h1*h1);
+					diag2_1[i] = -(diag1_1[i] + diag3_1[i] + 2. / tao);
+				}
+			}
+
+			diag1_1[N1 - 1] = (D(R0[N1 - 1][0]) + D(R0[N1 - 2][0])) / (h1*h1);
+			diag2_1[N1 - 1] = - (diag1_1[N1 - 1] + 2. / tao);
+			diag3_1[N1 - 1] = 0.;
+			vspom = progon3d(N1, diag1_1, diag2_1, diag3_1, right1_S);
+			for (int i = 0; i < N1; i++)  S05[i][0] = vspom[i];
+			delete[] vspom;
+			vspom = progon3d(N1, diag1_1, diag2_1, diag3_1, right1_I);
+			for (int i = 0; i < N1; i++)  I05[i][0] = vspom[i];
+			delete[] vspom;
+			vspom = progon3d(N1, diag1_1, diag2_1, diag3_1, right1_R);
+			for (int i = 0; i < N1; i++)  R05[i][0] = vspom[i];
+			delete[] vspom;
+
+		//j = 1..N2-1
+		for (int j = 1; j < N2 - 1; j++) {
+
+			diag1_1[0] = 0.;
+			diag3_1[0] = (D(R0[1][j]) + D(R0[0][j])) / (h1*h1);
+			diag2_1[0] = -(diag3_1[0] + 2. / tao);
+
+			for (int i = 0; i < N1; i++) {
+
+				right1_S[i] = -(2. / tao *S0[i][j] 
+					+ 0.5*(D(R0[i][j + 1]) + D(R0[i][j])) / (h2*h2)*(S0[i][j + 1] - S0[i][j])
+					- 0.5*(D(R0[i][j]) + D(R0[i][j - 1])) / (h2*h2)*(S0[i][j] - S0[i][j - 1]) 
+					- Int0[i][j]);
+				right1_I[i] = -(2. / tao *I0[i][j]
+					+ 0.5*(D(R0[i][j + 1]) + D(R0[i][j])) / (h2*h2)*(I0[i][j + 1] - I0[i][j])
+					- 0.5*(D(R0[i][j]) + D(R0[i][j - 1])) / (h2*h2)*(I0[i][j] - I0[i][j - 1])
+					+ Int0[i][j] - Q*I0[i][j]);
+				right1_R[i] = -(2. / tao *R0[i][j]
+					+ 0.5*(D(R0[i][j + 1]) + D(R0[i][j])) / (h2*h2)*(R0[i][j + 1] - R0[i][j])
+					- 0.5*(D(R0[i][j]) + D(R0[i][j - 1])) / (h2*h2)*(R0[i][j] - R0[i][j - 1])
+					+ Q*I0[i][j]);
+				if (i != 0 && i != N1 - 1) {
+					diag1_1[i] = 0.5*(D(R0[i][j]) + D(R0[i - 1][j])) / (h1*h1);
+					diag3_1[i] = 0.5*(D(R0[i + 1][j]) + D(R0[i][j])) / (h1*h1);
+					diag2_1[i] = -(diag1_1[i] + diag3_1[i] + 2. / tao);
+				}
+			}
+
+			diag1_1[N1 - 1] = (D(R0[N1 - 1][j]) + D(R0[N1 - 2][j])) / (h1*h1);
+			diag2_1[N1 - 1] =  - (diag1_1[N1 - 1] + 2. / tao);
+			diag3_1[N1 - 1] = 0.;
+
+			vspom = progon3d(N1, diag1_1, diag2_1, diag3_1, right1_S);
+			for (int i = 0; i < N1; i++)  S05[i][j] = vspom[i];
+			delete[] vspom;
+			vspom = progon3d(N1, diag1_1, diag2_1, diag3_1, right1_I);
+			for (int i = 0; i < N1; i++)  I05[i][j] = vspom[i];
+			delete[] vspom;
+			vspom = progon3d(N1, diag1_1, diag2_1, diag3_1, right1_R);
+			for (int i = 0; i < N1; i++)  R05[i][j] = vspom[i];
+			delete[] vspom;
+		}
+
+		//j = N2
+		diag1_1[0] = 0.;
+		diag3_1[0] = (D(R0[N1-1][0]) + D(R0[N1-2][0])) / (h1*h1);
+		diag2_1[0] = -(diag3_1[0] + 2. / tao);
+
+		for (int i = 0; i < N1; i++) {
+
+			right1_S[i] = -(2. / tao*S0[i][N2 - 1] 
+				+ (D(R0[i][N2 - 2]) + D(R0[i][N2 - 1])) / (h2*h2)*(S0[i][N2 - 2] - S0[i][N2 - 1])
+				- Int0[i][N2 - 1]);
+			right1_I[i] = -(2. / tao*I0[i][N2 - 1]
+				+ (D(R0[i][N2 - 2]) + D(R0[i][N2 - 1])) / (h2*h2)*(I0[i][N2 - 2] - I0[i][N2 - 1])
+				+ Int0[i][N2 - 1] - Q*I0[i][N2 - 1]);
+			right1_R[i] = -(2. / tao*R0[i][N2 - 1]
+				+ (D(R0[i][N2 - 2]) + D(R0[i][N2 - 1])) / (h2*h2)*(R0[i][N2 - 2] - R0[i][N2 - 1])
+				+ Q*I0[i][N2 - 1]);
+			if (i != 0 && i != N1 - 1) {
+				diag1_1[i] = 0.5*(D(R0[i][N2 - 1]) + D(R0[i - 1][N2 - 2])) / (h1*h1);
+				diag3_1[i] = 0.5*(D(R0[i + 1][N2 - 1]) + D(R0[i][N2 - 2])) / (h1*h1);
+				diag2_1[i] = -(diag1_1[i] + diag3_1[i] + 2. / tao);
+			}
+		}
+
+		diag1_1[N1 - 1] = (D(R0[N1 - 1][N2 - 1]) + D(R0[N1 - 2][N2 - 1])) / (h1*h1);
+		diag2_1[N1 - 1] = -(diag1_1[N1 - 1] + 2. / tao);
+		diag3_1[N1 - 1] = 0.;
+
+		vspom = progon3d(N1, diag1_1, diag2_1, diag3_1, right1_S);
+		for (int i = 0; i < N1; i++)  S05[i][N2 - 1] = vspom[i];
+		delete[] vspom;
+		vspom = progon3d(N1, diag1_1, diag2_1, diag3_1, right1_I);
+		for (int i = 0; i < N1; i++)  I05[i][N2 - 1] = vspom[i];
+		delete[] vspom;
+		vspom = progon3d(N1, diag1_1, diag2_1, diag3_1, right1_R);
+		for (int i = 0; i < N1; i++)  R05[i][N2 - 1] = vspom[i];
+		delete[] vspom;
+
+/*==================================================================================================================================*/
+
+			//ПРЕДИКТОР(явная схема) 
+			//(S,I,R)
+
+			for (int i = 1; i < N1 - 1; i++)
+				for (int j = 1; j < N2 - 1; j++)
+				{
+					Sp[i][j] = S0[i][j]
+						+ (0.5*(D(R0[i][j + 1]) + D(R0[i][j])) / (h2*h2)*(S0[i][j + 1] - S0[i][j])
+						- 0.5*(D(R0[i][j]) + D(R0[i][j - 1])) / (h2*h2)*(S0[i][j] - S0[i][j - 1])
+						+ 0.5*(D(R0[i + 1][j]) + D(R0[i][j])) / (h2*h2)*(S0[i + 1][j] - S0[i][j])
+						- 0.5*(D(R0[i][j]) + D(R0[i - 1][j])) / (h2*h2)*(S0[i][j] - S0[i - 1][j])
+						- Int0[i][j])*tao;
+
+					Ip[i][j] = I0[i][j]
+						+ (0.5*(D(R0[i][j + 1]) + D(R0[i][j])) / (h2*h2)*(I0[i][j + 1] - I0[i][j])
+						- 0.5*(D(R0[i][j]) + D(R0[i][j - 1])) / (h2*h2)*(I0[i][j] - I0[i][j - 1])
+						+ 0.5*(D(R0[i + 1][j]) + D(R0[i][j])) / (h2*h2)*(I0[i + 1][j] - I0[i][j])
+						- 0.5*(D(R0[i][j]) + D(R0[i - 1][j])) / (h2*h2)*(I0[i][j] - I0[i - 1][j])
+						+ Int0[i][j] - Q*I0[i][j])*tao;
+
+					Rp[i][j] = R0[i][j]
+						+ (0.5*(D(R0[i][j + 1]) + D(R0[i][j])) / (h2*h2)*(R0[i][j + 1] - R0[i][j])
+						- 0.5*(D(R0[i][j]) + D(R0[i][j - 1])) / (h2*h2)*(R0[i][j] - R0[i][j - 1])
+						+ 0.5*(D(R0[i + 1][j]) + D(R0[i][j])) / (h2*h2)*(R0[i + 1][j] - R0[i][j])
+						- 0.5*(D(R0[i][j]) + D(R0[i - 1][j])) / (h2*h2)*(R0[i][j] - R0[i - 1][j])
+						+ Q*I0[i][j])*tao;
+				}
+
+			//j = 0,j = N2
+			for (int i = 1; i < N1 - 1; i++)
+			{
+				Sp[i][0] = S0[i][0]
+					+ ((D(R0[i][1]) + D(R0[i][0])) / (h2*h2)*(S0[i][1] - S0[i][0])
+					+ 0.5*(D(R0[i + 1][0]) + D(R0[i][0])) / (h2*h2)*(S0[i + 1][0] - S0[i][0])
+					- 0.5*(D(R0[i][0]) + D(R0[i - 1][0])) / (h2*h2)*(S0[i][0] - S0[i - 1][0])
+					- Int0[i][0])*tao;
+
+				Sp[i][N2 - 1] = S0[i][N2 - 1]
+					+ ((D(R0[i][N2 - 2]) + D(R0[i][N2 - 1])) / (h2*h2)*(S0[i][N2 - 2] - S0[i][N2 - 1])
+					+ 0.5*(D(R0[i + 1][N2 - 1]) + D(R0[i][N2 - 1])) / (h2*h2)*(S0[i + 1][N2 - 1] - S0[i][N2 - 1])
+					- 0.5*(D(R0[i][N2 - 1]) + D(R0[i - 1][N2 - 1])) / (h2*h2)*(S0[i][N2 - 1] - S0[i - 1][N2 - 1])
+					- Int0[i][N2 - 1])*tao;
+
+				Ip[i][0] = I0[i][0]
+					+ ((D(R0[i][1]) + D(R0[i][0])) / (h2*h2)*(I0[i][1] - I0[i][0])
+					+ 0.5*(D(R0[i + 1][0]) + D(R0[i][0])) / (h2*h2)*(I0[i + 1][0] - I0[i][0])
+					- 0.5*(D(R0[i][0]) + D(R0[i - 1][0])) / (h2*h2)*(I0[i][0] - I0[i - 1][0])
+					+ Int0[i][0] - Q*I0[i][0])*tao;
+
+				Ip[i][N2 - 1] = I0[i][N2 - 1]
+					+ ((D(R0[i][N2 - 2]) + D(R0[i][N2 - 1])) / (h2*h2)*(I0[i][N2 - 2] - I0[i][N2 - 1])
+					+ 0.5*(D(R0[i + 1][N2 - 1]) + D(R0[i][N2 - 1])) / (h2*h2)*(I0[i + 1][N2 - 1] - I0[i][N2 - 1])
+					- 0.5*(D(R0[i][N2 - 1]) + D(R0[i - 1][N2 - 1])) / (h2*h2)*(I0[i][N2 - 1] - I0[i - 1][N2 - 1])
+					+ Int0[i][N2 - 1] - Q*I0[i][N2 - 1])*tao;
+
+				Rp[i][0] = R0[i][0]
+					+ ((D(R0[i][1]) + D(R0[i][0])) / (h2*h2)*(R0[i][1] - R0[i][0])
+					+ 0.5*(D(R0[i + 1][0]) + D(R0[i][0])) / (h2*h2)*(R0[i + 1][0] - R0[i][0])
+					- 0.5*(D(R0[i][0]) + D(R0[i - 1][0])) / (h2*h2)*(R0[i][0] - R0[i - 1][0])
+					+ Q*I0[i][0])*tao;
+
+				Rp[i][N2 - 1] = R0[i][N2 - 1]
+					+ ((D(R0[i][N2 - 2]) + D(R0[i][N2 - 1])) / (h2*h2)*(R0[i][N2 - 2] - R0[i][N2 - 1])
+					+ 0.5*(D(R0[i + 1][N2 - 1]) + D(R0[i][N2 - 1])) / (h2*h2)*(R0[i + 1][N2 - 1] - R0[i][N2 - 1])
+					- 0.5*(D(R0[i][N2 - 1]) + D(R0[i - 1][N2 - 1])) / (h2*h2)*(R0[i][N2 - 1] - R0[i - 1][N2 - 1])
+					+ Q*I0[i][N2 - 1])*tao;
+			}
+
+			//i = 0,i = N1
+			for (int j = 1; j < N2 - 1; j++)
+			{
+				Sp[0][j] = S0[0][j]
+					+ (0.5*(D(R0[0][j + 1]) + D(R0[0][j])) / (h2*h2)*(S0[0][j + 1] - S0[0][j])
+					- 0.5*(D(R0[0][j]) + D(R0[0][j - 1])) / (h2*h2)*(S0[0][j] - S0[0][j - 1])
+					+ (D(R0[1][j]) + D(R0[0][j])) / (h2*h2)*(S0[1][j] - S0[0][j])
+					- Int0[0][j])*tao;
+
+				Sp[N1 - 1][j] = S0[N1 - 1][j]
+					+ (0.5*(D(R0[N1 - 1][j + 1]) + D(R0[N1 - 1][j])) / (h2*h2)*(S0[N1 - 1][j + 1] - S0[N1 - 1][j])
+					- 0.5*(D(R0[N1 - 1][j]) + D(R0[N1 - 1][j - 1])) / (h2*h2)*(S0[N1 - 1][j] - S0[N1 - 1][j - 1])
+					+ (D(R0[N1 - 2][j]) + D(R0[N1 - 1][j])) / (h2*h2)*(S0[N1 - 2][j] - S0[N1 - 1][j])
+					- Int0[N1 - 1][j])*tao;
+
+				Ip[0][j] = I0[0][j]
+					+ (0.5*(D(R0[0][j + 1]) + D(R0[0][j])) / (h2*h2)*(I0[0][j + 1] - I0[0][j])
+					- 0.5*(D(R0[0][j]) + D(R0[0][j - 1])) / (h2*h2)*(I0[0][j] - I0[0][j - 1])
+					+ (D(R0[1][j]) + D(R0[0][j])) / (h2*h2)*(I0[1][j] - I0[0][j])
+					+ Int0[0][j] - Q*I0[0][j])*tao;
+
+				Ip[N1 - 1][j] = I0[N1 - 1][j]
+						+ (0.5*(D(R0[N1 - 1][j + 1]) + D(R0[N1 - 1][j])) / (h2*h2)*(I0[N1 - 1][j + 1] - I0[N1 - 1][j])
+						- 0.5*(D(R0[N1 - 1][j]) + D(R0[N1 - 1][j - 1])) / (h2*h2)*(I0[N1 - 1][j] - I0[N1 - 1][j - 1])
+						+ (D(R0[N1 - 2][j]) + D(R0[N1 - 1][j])) / (h2*h2)*(I0[N1 - 2][j] - I0[N1 - 1][j])
+						+ Int0[N1 - 1][j] - Q*I0[N1 - 1][j])*tao;
+
+				Rp[0][j] = R0[0][j]
+						+ (0.5*(D(R0[0][j + 1]) + D(R0[0][j])) / (h2*h2)*(R0[0][j + 1] - R0[0][j])
+						- 0.5*(D(R0[0][j]) + D(R0[0][j - 1])) / (h2*h2)*(R0[0][j] - R0[0][j - 1])
+						+ (D(R0[1][j]) + D(R0[0][j])) / (h2*h2)*(R0[1][j] - R0[0][j])
+						+ Q*I0[0][j])*tao;
+
+				Rp[N1 - 1][j] = R0[N1 - 1][j]
+						+ (0.5*(D(R0[N1 - 1][j + 1]) + D(R0[N1 - 1][j])) / (h2*h2)*(R0[N1 - 1][j + 1] - R0[N1 - 1][j])
+						- 0.5*(D(R0[N1 - 1][j]) + D(R0[N1 - 1][j - 1])) / (h2*h2)*(R0[N1 - 1][j] - R0[N1 - 1][j - 1])
+						+ (D(R0[N1 - 2][j]) + D(R0[N1 - 1][j])) / (h2*h2)*(R0[N1 - 2][j] - R0[N1 - 1][j])
+						+ Q*I0[N1 - 1][j])*tao;
+			}
+
+
+			Sp[0][0] = S0[0][0]
+					+ ((D(R0[0][1]) + D(R0[0][0])) / (h2*h2)*(S0[0][1] - S0[0][0])
+					+ (D(R0[1][0]) + D(R0[0][0])) / (h2*h2)*(S0[1][0] - S0[0][0])
+					- Int0[0][0])*tao;
+
+			Sp[0][N2 - 1] = S0[0][N2 - 1]
+					+ ((D(R0[0][N2 - 2]) + D(R0[0][N2 - 1])) / (h2*h2)*(S0[0][N2 - 2] - S0[0][N2 - 1])
+					+ (D(R0[1][N2 - 1]) + D(R0[0][N2 - 1])) / (h2*h2)*(S0[1][N2 - 1] - S0[0][N2 - 1])
+					- Int0[0][N2 - 1])*tao;
+
+			Sp[N1 - 1][0] = S0[N1 - 1][0]
+					+ ((D(R0[N1 - 1][1]) + D(R0[N1 - 1][0])) / (h2*h2)*(S0[N1 - 1][1] - S0[N1 - 1][0])
+					+ (D(R0[N1 - 2][0]) + D(R0[N1 - 1][0])) / (h2*h2)*(S0[N1 - 2][0] - S0[N1 - 1][0])
+					- Int0[N1 - 1][0])*tao;
+
+			Sp[N1 - 1][N2 - 1] = S0[N1 - 1][N2 - 1]
+					+ ((D(R0[N1 - 1][N2 - 2]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(S0[N1 - 1][N2 - 2] - S0[N1 - 1][N2 - 1])
+					+ (D(R0[N1 - 2][N2 - 1]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(S0[N1 - 2][N2 - 1] - S0[N1 - 1][N2 - 1])
+					- Int0[N1 - 1][N2 - 1])*tao;
+
+			Ip[0][0] = I0[0][0]
+					+ ((D(R0[0][1]) + D(R0[0][0])) / (h2*h2)*(I0[0][1] - I0[0][0])
+					+ (D(R0[1][0]) + D(R0[0][0])) / (h2*h2)*(I0[1][0] - I0[0][0])
+					+ Int0[0][0] - Q*I0[0][0])*tao;
+
+			Ip[0][N2 - 1] = I0[0][N2 - 1]
+					+ ((D(R0[0][N2 - 2]) + D(R0[0][N2 - 1])) / (h2*h2)*(I0[0][N2 - 2] - I0[0][N2 - 1])
+					+ (D(R0[1][N2 - 1]) + D(R0[0][N2 - 1])) / (h2*h2)*(I0[1][N2 - 1] - I0[0][N2 - 1])
+					+ Int0[0][N2 - 1] - Q*I0[0][N2 - 1])*tao;
+
+			Ip[N1 - 1][0] = I0[N1 - 1][0]
+					+ ((D(R0[N1 - 1][1]) + D(R0[N1 - 1][0])) / (h2*h2)*(I0[N1 - 1][1] - I0[N1 - 1][0])
+					+ (D(R0[N1 - 2][0]) + D(R0[N1 - 1][0])) / (h2*h2)*(I0[N1 - 2][0] - I0[N1 - 1][0])
+					+ Int0[N1 - 1][0] - Q*I0[N1 - 1][0])*tao;
+
+			Ip[N1 - 1][N2 - 1] = I0[N1 - 1][N2 - 1]
+					+ ((D(R0[N1 - 1][N2 - 2]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(I0[N1 - 1][N2 - 2] - I0[N1 - 1][N2 - 1])
+					+ (D(R0[N1 - 2][N2 - 1]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(I0[N1 - 2][N2 - 1] - I0[N1 - 1][N2 - 1])
+					+ Int0[N1 - 1][N2 - 1] - Q*I0[N1 - 1][N2 - 1])*tao;
+
+			Rp[0][0] = R0[0][0]
+					+ ((D(R0[0][1]) + D(R0[0][0])) / (h2*h2)*(R0[0][1] - R0[0][0])
+					+ (D(R0[1][0]) + D(R0[0][0])) / (h2*h2)*(R0[1][0] - R0[0][0])
+					+ Q*I0[0][0])*tao;
+
+			Rp[0][N2 - 1] = R0[0][N2 - 1]
+					+ ((D(R0[0][N2 - 2]) + D(R0[0][N2 - 1])) / (h2*h2)*(R0[0][N2 - 2] - R0[0][N2 - 1])
+					+ (D(R0[1][N2 - 1]) + D(R0[0][N2 - 1])) / (h2*h2)*(R0[1][N2 - 1] - R0[0][N2 - 1])
+					+ Q*I0[0][N2 - 1])*tao;
+
+			Rp[N1 - 1][0] = R0[N1 - 1][0]
+					+ ((D(R0[N1 - 1][1]) + D(R0[N1 - 1][0])) / (h2*h2)*(R0[N1 - 1][1] - R0[N1 - 1][0])
+					+ (D(R0[N1 - 2][0]) + D(R0[N1 - 1][0])) / (h2*h2)*(R0[N1 - 2][0] - R0[N1 - 1][0])
+					+ Q*I0[N1 - 1][0])*tao;
+
+			Rp[N1 - 1][N2 - 1] = R0[N1 - 1][N2 - 1]
+					+ ((D(R0[N1 - 1][N2 - 2]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(R0[N1 - 1][N2 - 2] - R0[N1 - 1][N2 - 1])
+					+ (D(R0[N1 - 2][N2 - 1]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(R0[N1 - 2][N2 - 1] - R0[N1 - 1][N2 - 1])
+					+ Q*I0[N1 - 1][N2 - 1])*tao;
+
+/*==================================================================================================================================*/
+
+			//КОРРЕКТОР (симметричная схема)
+			//(S,I,R)
+#pragma omp parallel for shared(Int1)
+			for (int i = 0; i < N1; i++) {//Z(i*h1, j*h2, n*h1, m*h2)
+				for (int j = 0; j < N2; j++) {
+					Int1[i][j] = 0.;
+					for (int n = 0; n < N1 - 1; n++) {
+						for (int m = 0; m < N2 - 1; m++) {
+							Int1[i][j] += 0.25*h1*h2*(Z(i*h1, j*h2, n*h1, m*h2)*Ip[n][m] + Z(i*h1, j*h2, n*h1, (m + 1)*h2)*Ip[n][m + 1]
+								+ Z(i*h1, j*h2, (n + 1)*h1, m*h2)*Ip[n + 1][m] + Z(i*h1, j*h2, (n + 1)*h1, (m + 1)*h2)*Ip[n + 1][m + 1]);
+						}
+					}
+					Int1[i][j] *= N0*Sp[i][j];
+				}
+			}
+
+			for (int i = 1; i < N1 - 1; i++)
+				for (int j = 1; j < N2 - 1; j++)
+				{
+					Sc[i][j] = S0[i][j]
+							+ ((0.5*(D(R0[i][j + 1]) + D(R0[i][j])) / (h2*h2)*(S0[i][j + 1] - S0[i][j])
+							- 0.5*(D(R0[i][j]) + D(R0[i][j - 1])) / (h2*h2)*(S0[i][j] - S0[i][j - 1])
+							+ 0.5*(D(R0[i + 1][j]) + D(R0[i][j])) / (h2*h2)*(S0[i + 1][j] - S0[i][j])
+							- 0.5*(D(R0[i][j]) + D(R0[i - 1][j])) / (h2*h2)*(S0[i][j] - S0[i - 1][j])
+							- Int0[i][j])
+							+ (0.5*(D(Rp[i][j + 1]) + D(Rp[i][j])) / (h2*h2)*(Sp[i][j + 1] - Sp[i][j])
+							- 0.5*(D(Rp[i][j]) + D(Rp[i][j - 1])) / (h2*h2)*(Sp[i][j] - Sp[i][j - 1])
+							+ 0.5*(D(Rp[i + 1][j]) + D(Rp[i][j])) / (h2*h2)*(Sp[i + 1][j] - Sp[i][j])
+							- 0.5*(D(Rp[i][j]) + D(Rp[i - 1][j])) / (h2*h2)*(Sp[i][j] - Sp[i - 1][j])
+							- Int1[i][j]))*tao*0.5;
+
+					Ic[i][j] = I0[i][j]
+							+ ((0.5*(D(R0[i][j + 1]) + D(R0[i][j])) / (h2*h2)*(I0[i][j + 1] - I0[i][j])
+							- 0.5*(D(R0[i][j]) + D(R0[i][j - 1])) / (h2*h2)*(I0[i][j] - I0[i][j - 1])
+							+ 0.5*(D(R0[i + 1][j]) + D(R0[i][j])) / (h2*h2)*(I0[i + 1][j] - I0[i][j])
+							- 0.5*(D(R0[i][j]) + D(R0[i - 1][j])) / (h2*h2)*(I0[i][j] - I0[i - 1][j])
+							+ Int0[i][j] - Q*I0[i][j])
+							+ (0.5*(D(Rp[i][j + 1]) + D(Rp[i][j])) / (h2*h2)*(Ip[i][j + 1] - Ip[i][j])
+							- 0.5*(D(Rp[i][j]) + D(Rp[i][j - 1])) / (h2*h2)*(Ip[i][j] - Ip[i][j - 1])
+							+ 0.5*(D(Rp[i + 1][j]) + D(Rp[i][j])) / (h2*h2)*(Ip[i + 1][j] - Ip[i][j])
+							- 0.5*(D(Rp[i][j]) + D(Rp[i - 1][j])) / (h2*h2)*(Ip[i][j] - Ip[i - 1][j])
+							+ Int1[i][j] - Q*Ip[i][j]))*tao*0.5;
+
+					Rc[i][j] = R0[i][j]
+							+ ((0.5*(D(R0[i][j + 1]) + D(R0[i][j])) / (h2*h2)*(R0[i][j + 1] - R0[i][j])
+							- 0.5*(D(R0[i][j]) + D(R0[i][j - 1])) / (h2*h2)*(R0[i][j] - R0[i][j - 1])
+							+ 0.5*(D(R0[i + 1][j]) + D(R0[i][j])) / (h2*h2)*(R0[i + 1][j] - R0[i][j])
+							- 0.5*(D(R0[i][j]) + D(R0[i - 1][j])) / (h2*h2)*(R0[i][j] - R0[i - 1][j])
+							+ Q*I0[i][j])
+							+ (0.5*(D(Rp[i][j + 1]) + D(Rp[i][j])) / (h2*h2)*(Rp[i][j + 1] - Rp[i][j])
+							- 0.5*(D(Rp[i][j]) + D(Rp[i][j - 1])) / (h2*h2)*(Rp[i][j] - Rp[i][j - 1])
+							+ 0.5*(D(Rp[i + 1][j]) + D(Rp[i][j])) / (h2*h2)*(Rp[i + 1][j] - Rp[i][j])
+							- 0.5*(D(Rp[i][j]) + D(Rp[i - 1][j])) / (h2*h2)*(Rp[i][j] - Rp[i - 1][j])
+							+ Q*Ip[i][j]))*tao*0.5;
+				}
+
+			//j = 0,j = N2
+			for (int i = 1; i < N1 - 1; i++)
+			{
+				Sc[i][0] = S0[i][0]
+						+ (((D(R0[i][1]) + D(R0[i][0])) / (h2*h2)*(S0[i][1] - S0[i][0])
+						+ 0.5*(D(R0[i + 1][0]) + D(R0[i][0])) / (h2*h2)*(S0[i + 1][0] - S0[i][0])
+						- 0.5*(D(R0[i][0]) + D(R0[i - 1][0])) / (h2*h2)*(S0[i][0] - S0[i - 1][0])
+						- Int0[i][0])
+						+ ((D(Rp[i][1]) + D(Rp[i][0])) / (h2*h2)*(Sp[i][1] - Sp[i][0])
+						+ 0.5*(D(Rp[i + 1][0]) + D(Rp[i][0])) / (h2*h2)*(Sp[i + 1][0] - Sp[i][0])
+						- 0.5*(D(Rp[i][0]) + D(Rp[i - 1][0])) / (h2*h2)*(Sp[i][0] - Sp[i - 1][0])
+						- Int1[i][0]))*tao*0.5;
+
+				Sc[i][N2 - 1] = S0[i][N2 - 1]
+						+ (((D(R0[i][N2 - 2]) + D(R0[i][N2 - 1])) / (h2*h2)*(S0[i][N2 - 2] - S0[i][N2 - 1])
+						+ 0.5*(D(R0[i + 1][N2 - 1]) + D(R0[i][N2 - 1])) / (h2*h2)*(S0[i + 1][N2 - 1] - S0[i][N2 - 1])
+						- 0.5*(D(R0[i][N2 - 1]) + D(R0[i - 1][N2 - 1])) / (h2*h2)*(S0[i][N2 - 1] - S0[i - 1][N2 - 1])
+						- Int0[i][N2 - 1])
+						+ ((D(Rp[i][N2 - 2]) + D(Rp[i][N2 - 1])) / (h2*h2)*(Sp[i][N2 - 2] - Sp[i][N2 - 1])
+						+ 0.5*(D(Rp[i + 1][N2 - 1]) + D(Rp[i][N2 - 1])) / (h2*h2)*(Sp[i + 1][N2 - 1] - Sp[i][N2 - 1])
+						- 0.5*(D(Rp[i][N2 - 1]) + D(Rp[i - 1][N2 - 1])) / (h2*h2)*(Sp[i][N2 - 1] - Sp[i - 1][N2 - 1])
+						- Int1[i][N2 - 1]))*tao*0.5;
+
+				Ic[i][0] = I0[i][0]
+						+ (((D(R0[i][1]) + D(R0[i][0])) / (h2*h2)*(I0[i][1] - I0[i][0])
+						+ 0.5*(D(R0[i + 1][0]) + D(R0[i][0])) / (h2*h2)*(I0[i + 1][0] - I0[i][0])
+						- 0.5*(D(R0[i][0]) + D(R0[i - 1][0])) / (h2*h2)*(I0[i][0] - I0[i - 1][0])
+						+ Int0[i][0] - Q*I0[i][0])
+						+ ((D(Rp[i][1]) + D(Rp[i][0])) / (h2*h2)*(Ip[i][1] - Ip[i][0])
+						+ 0.5*(D(Rp[i + 1][0]) + D(Rp[i][0])) / (h2*h2)*(Ip[i + 1][0] - Ip[i][0])
+						- 0.5*(D(Rp[i][0]) + D(Rp[i - 1][0])) / (h2*h2)*(Ip[i][0] - Ip[i - 1][0])
+						+ Int1[i][0] - Q*Ip[i][0]))*tao*0.5;
+
+				Ic[i][N2 - 1] = I0[i][N2 - 1]
+						+ (((D(R0[i][N2 - 2]) + D(R0[i][N2 - 1])) / (h2*h2)*(I0[i][N2 - 2] - I0[i][N2 - 1])
+						+ 0.5*(D(R0[i + 1][N2 - 1]) + D(R0[i][N2 - 1])) / (h2*h2)*(I0[i + 1][N2 - 1] - I0[i][N2 - 1])
+						- 0.5*(D(R0[i][N2 - 1]) + D(R0[i - 1][N2 - 1])) / (h2*h2)*(I0[i][N2 - 1] - I0[i - 1][N2 - 1])
+						+ Int0[i][N2 - 1] - Q*I0[i][N2 - 1])
+						+ ((D(Rp[i][N2 - 2]) + D(Rp[i][N2 - 1])) / (h2*h2)*(Ip[i][N2 - 2] - Ip[i][N2 - 1])
+						+ 0.5*(D(Rp[i + 1][N2 - 1]) + D(Rp[i][N2 - 1])) / (h2*h2)*(Ip[i + 1][N2 - 1] - Ip[i][N2 - 1])
+						- 0.5*(D(Rp[i][N2 - 1]) + D(Rp[i - 1][N2 - 1])) / (h2*h2)*(Ip[i][N2 - 1] - Ip[i - 1][N2 - 1])
+						+ Int1[i][N2 - 1] - Q*Ip[i][N2 - 1]))*tao*0.5;
+
+				Rc[i][0] = R0[i][0]
+						+ (((D(R0[i][1]) + D(R0[i][0])) / (h2*h2)*(R0[i][1] - R0[i][0])
+						+ 0.5*(D(R0[i + 1][0]) + D(R0[i][0])) / (h2*h2)*(R0[i + 1][0] - R0[i][0])
+						- 0.5*(D(R0[i][0]) + D(R0[i - 1][0])) / (h2*h2)*(R0[i][0] - R0[i - 1][0])
+						+ Q*I0[i][0])
+						+ ((D(Rp[i][1]) + D(Rp[i][0])) / (h2*h2)*(Rp[i][1] - Rp[i][0])
+						+ 0.5*(D(Rp[i + 1][0]) + D(Rp[i][0])) / (h2*h2)*(Rp[i + 1][0] - Rp[i][0])
+						- 0.5*(D(Rp[i][0]) + D(Rp[i - 1][0])) / (h2*h2)*(Rp[i][0] - Rp[i - 1][0])
+						+ Q*Ip[i][0]))*tao*0.5;
+
+				Rc[i][N2 - 1] = R0[i][N2 - 1]
+						+ (((D(R0[i][N2 - 2]) + D(R0[i][N2 - 1])) / (h2*h2)*(R0[i][N2 - 2] - R0[i][N2 - 1])
+						+ 0.5*(D(R0[i + 1][N2 - 1]) + D(R0[i][N2 - 1])) / (h2*h2)*(R0[i + 1][N2 - 1] - R0[i][N2 - 1])
+						- 0.5*(D(R0[i][N2 - 1]) + D(R0[i - 1][N2 - 1])) / (h2*h2)*(R0[i][N2 - 1] - R0[i - 1][N2 - 1])
+						+ Q*I0[i][N2 - 1])
+						+ ((D(Rp[i][N2 - 2]) + D(Rp[i][N2 - 1])) / (h2*h2)*(Rp[i][N2 - 2] - Rp[i][N2 - 1])
+						+ 0.5*(D(Rp[i + 1][N2 - 1]) + D(Rp[i][N2 - 1])) / (h2*h2)*(Rp[i + 1][N2 - 1] - Rp[i][N2 - 1])
+						- 0.5*(D(Rp[i][N2 - 1]) + D(Rp[i - 1][N2 - 1])) / (h2*h2)*(Rp[i][N2 - 1] - Rp[i - 1][N2 - 1])
+						+ Q*Ip[i][N2 - 1]))*tao*0.5;
+			}
+
+			//i = 0,i = N1
+			for (int j = 1; j < N2 - 1; j++)
+			{
+				Sc[0][j] = S0[0][j]
+						+ ((0.5*(D(R0[0][j + 1]) + D(R0[0][j])) / (h2*h2)*(S0[0][j + 1] - S0[0][j])
+						- 0.5*(D(R0[0][j]) + D(R0[0][j - 1])) / (h2*h2)*(S0[0][j] - S0[0][j - 1])
+						+ (D(R0[1][j]) + D(R0[0][j])) / (h2*h2)*(S0[1][j] - S0[0][j])
+						- Int0[0][j])
+						+ (0.5*(D(Rp[0][j + 1]) + D(Rp[0][j])) / (h2*h2)*(Sp[0][j + 1] - Sp[0][j])
+						- 0.5*(D(Rp[0][j]) + D(Rp[0][j - 1])) / (h2*h2)*(Sp[0][j] - Sp[0][j - 1])
+						+ (D(Rp[1][j]) + D(Rp[0][j])) / (h2*h2)*(Sp[1][j] - Sp[0][j])
+						- Int1[0][j]))*tao*0.5;
+
+				Sc[N1 - 1][j] = S0[N1 - 1][j]
+						+ ((0.5*(D(R0[N1 - 1][j + 1]) + D(R0[N1 - 1][j])) / (h2*h2)*(S0[N1 - 1][j + 1] - S0[N1 - 1][j])
+						- 0.5*(D(R0[N1 - 1][j]) + D(R0[N1 - 1][j - 1])) / (h2*h2)*(S0[N1 - 1][j] - S0[N1 - 1][j - 1])
+						+ (D(R0[N1 - 2][j]) + D(R0[N1 - 1][j])) / (h2*h2)*(S0[N1 - 2][j] - S0[N1 - 1][j])
+						- Int0[N1 - 1][j])
+						+ (0.5*(D(Rp[N1 - 1][j + 1]) + D(Rp[N1 - 1][j])) / (h2*h2)*(Sp[N1 - 1][j + 1] - Sp[N1 - 1][j])
+						- 0.5*(D(Rp[N1 - 1][j]) + D(Rp[N1 - 1][j - 1])) / (h2*h2)*(Sp[N1 - 1][j] - Sp[N1 - 1][j - 1])
+						+ (D(Rp[N1 - 2][j]) + D(Rp[N1 - 1][j])) / (h2*h2)*(Sp[N1 - 2][j] - Sp[N1 - 1][j])
+						- Int1[N1 - 1][j]))*tao*0.5;
+
+				Ic[0][j] = I0[0][j]
+						+ ((0.5*(D(R0[0][j + 1]) + D(R0[0][j])) / (h2*h2)*(I0[0][j + 1] - I0[0][j])
+						- 0.5*(D(R0[0][j]) + D(R0[0][j - 1])) / (h2*h2)*(I0[0][j] - I0[0][j - 1])
+						+ (D(R0[1][j]) + D(R0[0][j])) / (h2*h2)*(I0[1][j] - I0[0][j])
+						+ Int0[0][j] - Q*I0[0][j])
+						+(0.5*(D(Rp[0][j + 1]) + D(Rp[0][j])) / (h2*h2)*(Ip[0][j + 1] - Ip[0][j])
+						- 0.5*(D(Rp[0][j]) + D(Rp[0][j - 1])) / (h2*h2)*(Ip[0][j] - Ip[0][j - 1])
+						+ (D(Rp[1][j]) + D(Rp[0][j])) / (h2*h2)*(Ip[1][j] - Ip[0][j])
+						+ Int1[0][j] - Q*Ip[0][j]))*tao*0.5;
+
+				Ic[N1 - 1][j] = I0[N1 - 1][j]
+						+ ((0.5*(D(R0[N1 - 1][j + 1]) + D(R0[N1 - 1][j])) / (h2*h2)*(I0[N1 - 1][j + 1] - I0[N1 - 1][j])
+						- 0.5*(D(R0[N1 - 1][j]) + D(R0[N1 - 1][j - 1])) / (h2*h2)*(I0[N1 - 1][j] - I0[N1 - 1][j - 1])
+						+ (D(R0[N1 - 2][j]) + D(R0[N1 - 1][j])) / (h2*h2)*(I0[N1 - 2][j] - I0[N1 - 1][j])
+						+ Int0[N1 - 1][j] - Q*I0[N1 - 1][j])
+						+(0.5*(D(Rp[N1 - 1][j + 1]) + D(Rp[N1 - 1][j])) / (h2*h2)*(Ip[N1 - 1][j + 1] - Ip[N1 - 1][j])
+						- 0.5*(D(Rp[N1 - 1][j]) + D(Rp[N1 - 1][j - 1])) / (h2*h2)*(Ip[N1 - 1][j] - Ip[N1 - 1][j - 1])
+						+ (D(Rp[N1 - 2][j]) + D(Rp[N1 - 1][j])) / (h2*h2)*(Ip[N1 - 2][j] - Ip[N1 - 1][j])
+						+ Int1[N1 - 1][j] - Q*Ip[N1 - 1][j]))*tao*0.5;
+
+				Rc[0][j] = R0[0][j]
+						+ ((0.5*(D(R0[0][j + 1]) + D(R0[0][j])) / (h2*h2)*(R0[0][j + 1] - R0[0][j])
+						- 0.5*(D(R0[0][j]) + D(R0[0][j - 1])) / (h2*h2)*(R0[0][j] - R0[0][j - 1])
+						+ (D(R0[1][j]) + D(R0[0][j])) / (h2*h2)*(R0[1][j] - R0[0][j])
+						+ Q*I0[0][j])
+						+(0.5*(D(Rp[0][j + 1]) + D(Rp[0][j])) / (h2*h2)*(Rp[0][j + 1] - Rp[0][j])
+						- 0.5*(D(Rp[0][j]) + D(Rp[0][j - 1])) / (h2*h2)*(Rp[0][j] - Rp[0][j - 1])
+						+ (D(Rp[1][j]) + D(Rp[0][j])) / (h2*h2)*(Rp[1][j] - Rp[0][j])
+						+ Q*Ip[0][j]))*tao*0.5;
+
+				Rc[N1 - 1][j] = R0[N1 - 1][j]
+						+ ((0.5*(D(R0[N1 - 1][j + 1]) + D(R0[N1 - 1][j])) / (h2*h2)*(R0[N1 - 1][j + 1] - R0[N1 - 1][j])
+						- 0.5*(D(R0[N1 - 1][j]) + D(R0[N1 - 1][j - 1])) / (h2*h2)*(R0[N1 - 1][j] - R0[N1 - 1][j - 1])
+						+ (D(R0[N1 - 2][j]) + D(R0[N1 - 1][j])) / (h2*h2)*(R0[N1 - 2][j] - R0[N1 - 1][j])
+						+ Q*I0[N1 - 1][j])
+						+ (0.5*(D(Rp[N1 - 1][j + 1]) + D(Rp[N1 - 1][j])) / (h2*h2)*(Rp[N1 - 1][j + 1] - Rp[N1 - 1][j])
+						- 0.5*(D(Rp[N1 - 1][j]) + D(Rp[N1 - 1][j - 1])) / (h2*h2)*(Rp[N1 - 1][j] - Rp[N1 - 1][j - 1])
+						+ (D(Rp[N1 - 2][j]) + D(Rp[N1 - 1][j])) / (h2*h2)*(Rp[N1 - 2][j] - Rp[N1 - 1][j])
+						+ Q*Ip[N1 - 1][j]))*tao*0.5;
+			}
+
+			Sc[0][0] = S0[0][0]
+					+ (((D(R0[0][1]) + D(R0[0][0])) / (h2*h2)*(S0[0][1] - S0[0][0])
+					+ (D(R0[1][0]) + D(R0[0][0])) / (h2*h2)*(S0[1][0] - S0[0][0])
+					- Int0[0][0])
+					+ ((D(Rp[0][1]) + D(Rp[0][0])) / (h2*h2)*(Sp[0][1] - Sp[0][0])
+					+ (D(Rp[1][0]) + D(Rp[0][0])) / (h2*h2)*(Sp[1][0] - Sp[0][0])
+					- Int1[0][0]))*tao*0.5;
+
+			Sc[0][N2 - 1] = S0[0][N2 - 1]
+					+ (((D(R0[0][N2 - 2]) + D(R0[0][N2 - 1])) / (h2*h2)*(S0[0][N2 - 2] - S0[0][N2 - 1])
+					+ (D(R0[1][N2 - 1]) + D(R0[0][N2 - 1])) / (h2*h2)*(S0[1][N2 - 1] - S0[0][N2 - 1])
+					- Int0[0][N2 - 1])
+					+ ((D(Rp[0][N2 - 2]) + D(Rp[0][N2 - 1])) / (h2*h2)*(Sp[0][N2 - 2] - Sp[0][N2 - 1])
+					+ (D(Rp[1][N2 - 1]) + D(Rp[0][N2 - 1])) / (h2*h2)*(Sp[1][N2 - 1] - Sp[0][N2 - 1])
+					- Int1[0][N2 - 1]))*tao*0.5;
+
+			Sc[N1 - 1][0] = S0[N1 - 1][0]
+					+ (((D(R0[N1 - 1][1]) + D(R0[N1 - 1][0])) / (h2*h2)*(S0[N1 - 1][1] - S0[N1 - 1][0])
+					+ (D(R0[N1 - 2][0]) + D(R0[N1 - 1][0])) / (h2*h2)*(S0[N1 - 2][0] - S0[N1 - 1][0])
+					- Int0[N1 - 1][0])
+					+ ((D(Rp[N1 - 1][1]) + D(Rp[N1 - 1][0])) / (h2*h2)*(Sp[N1 - 1][1] - Sp[N1 - 1][0])
+					+ (D(Rp[N1 - 2][0]) + D(Rp[N1 - 1][0])) / (h2*h2)*(Sp[N1 - 2][0] - Sp[N1 - 1][0])
+					- Int1[N1 - 1][0]))*tao*0.5;
+
+			Sc[N1 - 1][N2 - 1] = S0[N1 - 1][N2 - 1]
+					+ (((D(R0[N1 - 1][N2 - 2]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(S0[N1 - 1][N2 - 2] - S0[N1 - 1][N2 - 1])
+					+ (D(R0[N1 - 2][N2 - 1]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(S0[N1 - 2][N2 - 1] - S0[N1 - 1][N2 - 1])
+					- Int0[N1 - 1][N2 - 1])
+					+ ((D(Rp[N1 - 1][N2 - 2]) + D(Rp[N1 - 1][N2 - 1])) / (h2*h2)*(Sp[N1 - 1][N2 - 2] - Sp[N1 - 1][N2 - 1])
+					+ (D(Rp[N1 - 2][N2 - 1]) + D(Rp[N1 - 1][N2 - 1])) / (h2*h2)*(Sp[N1 - 2][N2 - 1] - Sp[N1 - 1][N2 - 1])
+					- Int1[N1 - 1][N2 - 1]))*tao*0.5;
+
+			Ic[0][0] = I0[0][0]
+					+ (((D(R0[0][1]) + D(R0[0][0])) / (h2*h2)*(I0[0][1] - I0[0][0])
+					+ (D(R0[1][0]) + D(R0[0][0])) / (h2*h2)*(I0[1][0] - I0[0][0])
+					+ Int0[0][0] - Q*I0[0][0])
+					+ ((D(Rp[0][1]) + D(Rp[0][0])) / (h2*h2)*(Ip[0][1] - Ip[0][0])
+					+ (D(Rp[1][0]) + D(Rp[0][0])) / (h2*h2)*(Ip[1][0] - Ip[0][0])
+					+ Int1[0][0] - Q*Ip[0][0]))*tao*0.5;
+
+			Ic[0][N2 - 1] = I0[0][N2 - 1]
+					+ (((D(R0[0][N2 - 2]) + D(R0[0][N2 - 1])) / (h2*h2)*(I0[0][N2 - 2] - I0[0][N2 - 1])
+					+ (D(R0[1][N2 - 1]) + D(R0[0][N2 - 1])) / (h2*h2)*(I0[1][N2 - 1] - I0[0][N2 - 1])
+					+ Int0[0][N2 - 1] - Q*I0[0][N2 - 1])
+					+ ((D(Rp[0][N2 - 2]) + D(Rp[0][N2 - 1])) / (h2*h2)*(Ip[0][N2 - 2] - Ip[0][N2 - 1])
+					+ (D(Rp[1][N2 - 1]) + D(Rp[0][N2 - 1])) / (h2*h2)*(Ip[1][N2 - 1] - Ip[0][N2 - 1])
+					+ Int1[0][N2 - 1] - Q*Ip[0][N2 - 1]))*tao*0.5;
+
+			Ic[N1 - 1][0] = I0[N1 - 1][0]
+					+ (((D(R0[N1 - 1][1]) + D(R0[N1 - 1][0])) / (h2*h2)*(I0[N1 - 1][1] - I0[N1 - 1][0])
+					+ (D(R0[N1 - 2][0]) + D(R0[N1 - 1][0])) / (h2*h2)*(I0[N1 - 2][0] - I0[N1 - 1][0])
+					+ Int0[N1 - 1][0] - Q*I0[N1 - 1][0])
+					+ ((D(Rp[N1 - 1][1]) + D(Rp[N1 - 1][0])) / (h2*h2)*(Ip[N1 - 1][1] - Ip[N1 - 1][0])
+					+ (D(Rp[N1 - 2][0]) + D(Rp[N1 - 1][0])) / (h2*h2)*(Ip[N1 - 2][0] - Ip[N1 - 1][0])
+					+ Int1[N1 - 1][0] - Q*Ip[N1 - 1][0]))*tao*0.5;
+
+			Ic[N1 - 1][N2 - 1] = I0[N1 - 1][N2 - 1]
+					+ (((D(R0[N1 - 1][N2 - 2]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(I0[N1 - 1][N2 - 2] - I0[N1 - 1][N2 - 1])
+					+ (D(R0[N1 - 2][N2 - 1]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(I0[N1 - 2][N2 - 1] - I0[N1 - 1][N2 - 1])
+					+ Int0[N1 - 1][N2 - 1] - Q*I0[N1 - 1][N2 - 1])
+					+ ((D(Rp[N1 - 1][N2 - 2]) + D(Rp[N1 - 1][N2 - 1])) / (h2*h2)*(Ip[N1 - 1][N2 - 2] - Ip[N1 - 1][N2 - 1])
+					+ (D(Rp[N1 - 2][N2 - 1]) + D(Rp[N1 - 1][N2 - 1])) / (h2*h2)*(Ip[N1 - 2][N2 - 1] - Ip[N1 - 1][N2 - 1])
+					+ Int1[N1 - 1][N2 - 1] - Q*Ip[N1 - 1][N2 - 1]))*tao*0.5;
+
+			Rc[0][0] = R0[0][0]
+					+ (((D(R0[0][1]) + D(R0[0][0])) / (h2*h2)*(R0[0][1] - R0[0][0])
+					+ (D(R0[1][0]) + D(R0[0][0])) / (h2*h2)*(R0[1][0] - R0[0][0])
+					+ Q*I0[0][0])
+					+((D(Rp[0][1]) + D(Rp[0][0])) / (h2*h2)*(Rp[0][1] - Rp[0][0])
+					+ (D(Rp[1][0]) + D(Rp[0][0])) / (h2*h2)*(Rp[1][0] - Rp[0][0])
+					+ Q*Ip[0][0]))*tao*0.5;
+
+			Rc[0][N2 - 1] = R0[0][N2 - 1]
+					+ (((D(R0[0][N2 - 2]) + D(R0[0][N2 - 1])) / (h2*h2)*(R0[0][N2 - 2] - R0[0][N2 - 1])
+					+ (D(R0[1][N2 - 1]) + D(R0[0][N2 - 1])) / (h2*h2)*(R0[1][N2 - 1] - R0[0][N2 - 1])
+					+ Q*I0[0][N2 - 1])
+					+((D(Rp[0][N2 - 2]) + D(Rp[0][N2 - 1])) / (h2*h2)*(Rp[0][N2 - 2] - Rp[0][N2 - 1])
+					+ (D(Rp[1][N2 - 1]) + D(Rp[0][N2 - 1])) / (h2*h2)*(Rp[1][N2 - 1] - Rp[0][N2 - 1])
+					+ Q*Ip[0][N2 - 1]))*tao*0.5;
+
+			Rc[N1 - 1][0] = R0[N1 - 1][0]
+					+ (((D(R0[N1 - 1][1]) + D(R0[N1 - 1][0])) / (h2*h2)*(R0[N1 - 1][1] - R0[N1 - 1][0])
+					+ (D(R0[N1 - 2][0]) + D(R0[N1 - 1][0])) / (h2*h2)*(R0[N1 - 2][0] - R0[N1 - 1][0])
+					+ Q*I0[N1 - 1][0])
+					+ ((D(Rp[N1 - 1][1]) + D(Rp[N1 - 1][0])) / (h2*h2)*(Rp[N1 - 1][1] - Rp[N1 - 1][0])
+					+ (D(Rp[N1 - 2][0]) + D(Rp[N1 - 1][0])) / (h2*h2)*(Rp[N1 - 2][0] - Rp[N1 - 1][0])
+					+ Q*Ip[N1 - 1][0]))*tao*0.5;
+
+			Rc[N1 - 1][N2 - 1] = R0[N1 - 1][N2 - 1]
+					+ (((D(R0[N1 - 1][N2 - 2]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(R0[N1 - 1][N2 - 2] - R0[N1 - 1][N2 - 1])
+					+ (D(R0[N1 - 2][N2 - 1]) + D(R0[N1 - 1][N2 - 1])) / (h2*h2)*(R0[N1 - 2][N2 - 1] - R0[N1 - 1][N2 - 1])
+					+ Q*I0[N1 - 1][N2 - 1])
+					+ ((D(Rp[N1 - 1][N2 - 2]) + D(Rp[N1 - 1][N2 - 1])) / (h2*h2)*(Rp[N1 - 1][N2 - 2] - Rp[N1 - 1][N2 - 1])
+					+ (D(Rp[N1 - 2][N2 - 1]) + D(Rp[N1 - 1][N2 - 1])) / (h2*h2)*(Rp[N1 - 2][N2 - 1] - Rp[N1 - 1][N2 - 1])
+					+ Q*Ip[N1 - 1][N2 - 1]))*tao*0.5;
+
+/*==================================================================================================================================*/
+
+		//ВТОРОЕ ИЗМЕРЕНИЕ
+#pragma omp parallel for shared(Int1)
+			for (int i = 0; i < N1; i++) {//Z(i*h1, j*h2, n*h1, m*h2)
+				for (int j = 0; j < N2; j++) {
+					Int1[i][j] = 0.;
+					for (int n = 0; n < N1 - 1; n++) {
+						for (int m = 0; m < N2 - 1; m++) {
+							Int1[i][j] += 0.25*h1*h2*(Z(i*h1, j*h2, n*h1, m*h2)*Ic[n][m] + Z(i*h1, j*h2, n*h1, (m + 1)*h2)*Ic[n][m + 1]
+								+ Z(i*h1, j*h2, (n + 1)*h1, m*h2)*Ic[n + 1][m] + Z(i*h1, j*h2, (n + 1)*h1, (m + 1)*h2)*Ic[n + 1][m + 1]);
+						}
+					}
+					Int1[i][j] *= N0*Sc[i][j];
+				}
+			}
+
+		//i = 0
+			diag1_2[0] = 0.;
+			diag3_2[0] = (D(Rc[0][1]) + D(Rc[0][0])) / (h2*h2);
+			diag2_2[0] = - (diag3_2[0] + 2. / tao);
+
+			for (int j = 0; j < N2; j++) {
+				right2_S[j] = -(2. / tao*S05[0][j] 
+					+ (D(Rc[1][j]) + D(Rc[0][j])) / (h1*h1)*(S05[1][j] - S05[0][j]) 
+					- Int1[0][j]);
+				right2_I[j] = -(2. / tao*I05[0][j]
+					+ (D(Rc[1][j]) + D(Rc[0][j])) / (h1*h1)*(I05[1][j] - I05[0][j])
+					+ Int1[0][j] - Q*Ic[0][j]);
+				right2_R[j] = -(2. / tao*R05[0][j]
+					+ (D(Rc[1][j]) + D(Rc[0][j])) / (h1*h1)*(R05[1][j] - R05[0][j])
+					+ Q*Ic[0][j]);
+				if (j != 0 && j != N2 - 1) {
+					diag1_2[j] = 0.5*(D(Rc[0][j]) + D(Rc[0][j - 1])) / (h2*h2);
+					diag3_2[j] = 0.5*(D(Rc[0][j + 1]) + D(Rc[0][j])) / (h2*h2);
+					diag2_2[j] = -(diag1_2[j] + diag3_2[j] + 2. / tao);
+				}
+			}
+
+			diag1_2[N2 - 1] = (D(Rc[0][N2 - 2]) + D(Rc[0][N2 - 1])) / (h2*h2);
+			diag2_2[N2 - 1] = -(diag1_2[N2 - 1] + 2. / tao);
+			diag3_2[N2 - 1] = 0.;
+
+			S1[0] = progon3d(N2, diag1_2, diag2_2, diag3_2, right2_S);
+			I1[0] = progon3d(N2, diag1_2, diag2_2, diag3_2, right2_I);
+			R1[0] = progon3d(N2, diag1_2, diag2_2, diag3_2, right2_R);
+		
+		//i = 1..N1-1
+		for (int i = 1; i < N1 - 1; i++)
+		{
+			diag1_2[0] = 0.;
+			diag3_2[0] = (D(Rc[i][1]) + D(Rc[i][0])) / (h2*h2);
+			diag2_2[0] = -(diag3_2[0] + 2. / tao);
+
+			for (int j = 0; j < N2; j++) {
+				right2_S[j] = -(2. / tao*S05[i][j]
+					+ 0.5*(D(Rc[i + 1][j]) + D(Rc[i][j]))*(S05[i + 1][j] - S05[i][j]) / (h1*h1)
+					- 0.5*(D(Rc[i][j]) + D(Rc[i - 1][j]))*(S05[i][j] - S05[i - 1][j]) / (h1*h1)
+					- Int1[i][j]);
+				right2_I[j] = -(2. / tao*I05[i][j]
+					+ 0.5*(D(Rc[i + 1][j]) + D(Rc[i][j]))*(I05[i + 1][j] - I05[i][j]) / (h1*h1)
+					- 0.5*(D(Rc[i][j]) + D(Rc[i - 1][j]))*(I05[i][j] - I05[i - 1][j]) / (h1*h1)
+					+ Int1[i][j] - Q*Ic[i][j]);
+				right2_R[j] = -(2. / tao*R05[i][j]
+					+ 0.5*(D(Rc[i + 1][j]) + D(Rc[i][j]))*(R05[i + 1][j] - R05[i][j]) / (h1*h1)
+					- 0.5*(D(Rc[i][j]) + D(Rc[i - 1][j]))*(R05[i][j] - R05[i - 1][j]) / (h1*h1)
+					+ Q*Ic[i][j]);
+				if (j != 0 && j != N2 - 1) {
+					diag1_2[j] = 0.5*(D(Rc[i][j]) + D(Rc[i][j - 1])) / (h2*h2);
+					diag3_2[j] = 0.5*(D(Rc[i][j + 1]) + D(Rc[i][j])) / (h2*h2);
+					diag2_2[j] = -(diag1_2[j] + diag3_2[j] + 2. / tao);
+				}
+			}
+
+			diag1_2[N2 - 1] = (D(Rc[i][N2 - 2]) + D(Rc[i][N2 - 1])) / (h2*h2);
+			diag2_2[N2 - 1] = -(diag1_2[N2 - 1] + 2. / tao);
+			diag3_2[N2 - 1] = 0.;
+
+			S1[i] = progon3d(N2, diag1_2, diag2_2, diag3_2, right2_S);
+			I1[i] = progon3d(N2, diag1_2, diag2_2, diag3_2, right2_I);
+			R1[i] = progon3d(N2, diag1_2, diag2_2, diag3_2, right2_R);
+		}
+
+		//i = N1
+		diag1_2[0] = 0.;
+		diag3_2[0] = (D(Rc[N1 - 1][1]) + D(Rc[N1 - 1][0])) / (h2*h2);
+		diag2_2[0] = -(diag3_2[0] + 2. / tao);
+
+		for (int j = 0; j < N2; j++) {
+			right2_S[j] = -(2. / tao*S05[N1 - 1][j]
+				+ (D(Rc[N1 - 2][j]) + D(Rc[N1 - 1][j])) / (h1*h1)*(S05[N1 - 2][j] - S05[N1 - 1][j]) 
+				- Int1[N1 - 1][j]);
+			right2_I[j] = -(2. / tao*I05[N1 - 1][j]
+				+ (D(Rc[N1 - 2][j]) + D(Rc[N1 - 1][j])) / (h1*h1)*(I05[N1 - 2][j] - I05[N1 - 1][j])
+				+ Int1[N1 - 1][j] - Q*Ic[N1 - 1][j]);
+			right2_R[j] = -(2. / tao*R05[N1 - 1][j]
+				+ (D(Rc[N1 - 2][j]) + D(Rc[N1 - 1][j])) / (h1*h1)*(R05[N1 - 2][j] - R05[N1 - 1][j])
+				+ Q*Ic[N1 - 1][j]);
+			if (j != 0 && j != N2 - 1) {
+				diag1_2[j] = 0.5*(D(Rc[N1 - 1][j]) + D(Rc[N1 - 1][j - 1])) / (h2*h2);
+				diag3_2[j] = 0.5*(D(Rc[N1 - 1][j + 1]) + D(Rc[N1 - 1][j])) / (h2*h2);
+				diag2_2[j] = -(diag1_2[j] + diag3_2[j] + 2. / tao);
+			}
+		}
+		diag1_2[N2 - 1] = (D(Rc[N1 - 1][N2 - 2]) + D(Rc[N1 - 1][N2 - 1])) / (h2*h2);
+		diag2_2[N2 - 1] = -(diag1_2[N2 - 1] + 2. / tao);
+		diag3_2[N2 - 1] = 0.;
+
+		S1[N1 - 1] = progon3d(N2, diag1_2, diag2_2, diag3_2, right2_S);
+		I1[N1 - 1] = progon3d(N2, diag1_2, diag2_2, diag3_2, right2_I);
+		R1[N1 - 1] = progon3d(N2, diag1_2, diag2_2, diag3_2, right2_R);
+
+		std::swap(S1,S0);
+		std::swap(I1, I0);
+		std::swap(R1, R0);
+		for (int i = 0; i < N1; i++) {
+			delete[] S1[i];
+			delete[] I1[i];
+			delete[] R1[i];
+		}
+
+/*==================================================================================================================================*/
+
+		if (k % freq == 0) {
+			write_file(S0, I0, R0, N1, N2, num_file);
+			num_file++;
+		}
+		t += omp_get_wtime();
+	}//end for T
+
+	 //проверка консервативности
+	for (int i = 0; i < N1; i++)
+		for (int j = 0; j < N2; j++) Sp[i][j] = S0[i][j] + I0[i][j] + R0[i][j];
+
+	std::cout << "N0_end = " << Integrate(N1 - 1, N2 - 1, h1, h2, Sp) << endl << "\nt = " << t;
+
+	delete[] right1_S;
+	delete[] right1_I;
+	delete[] right1_R;
+	delete[] diag1_1;
+	delete[] diag2_1;
+	delete[] diag3_1;
+
+	delete[] right2_S;
+	delete[] right2_I;
+	delete[] right2_R;
+	delete[] diag1_2;
+	delete[] diag2_2;
+	delete[] diag3_2;
+
+	for (int i = 0; i < N1; i++) { 
+		delete[] S0[i]; delete[] S05[i]; 
+		delete[] I0[i]; delete[] I05[i]; 
+		delete[] R0[i]; delete[] R05[i]; 
+		delete[] Sp[i]; delete[] Sc[i]; 
+		delete[] Ip[i]; delete[] Ic[i]; 
+		delete[] Rp[i]; delete[] Rc[i];
+		delete[] Int0[i]; delete[] Int1[i];
+	}
+
+	delete[] S0; delete[] S05; delete[] S1;
+	delete[] I0; delete[] I05; delete[] I1; 
+	delete[] R0; delete[] R05; delete[] R1;
+	delete[] Sp; delete[] Sc;
+	delete[] Ip; delete[] Ic; 
+	delete[] Rp; delete[] Rc;
+	delete[] Int0; delete[] Int1;
+}
+
+mytipe* progon3d(int dim, mytipe* a, mytipe* b, mytipe* c, mytipe* d)//a*x_{i-1} + b*x_i + c*x_{i+1} = d_i
+{
+	mytipe* alfa = new mytipe[dim];
+	mytipe* betta = new mytipe[dim];
+	mytipe znam;
+
+	alfa[0] = -c[0] / b[0]; betta[0] = d[0] / b[0];
+
+	for (int i = 1; i < dim; i++) {
+		znam = b[i] + a[i] * alfa[i - 1];
+		alfa[i] = -c[i] / znam;
+		betta[i] = (d[i] - a[i] * betta[i - 1]) / znam;
+	}
+
+	for (int i = dim - 2; i > -1; i--) betta[i] += alfa[i] * betta[i + 1];
+
+	delete[] alfa;
+
+	return  betta;
+}
+mytipe Integrate(const int Nx, const int Ny, mytipe hx, mytipe hy, mytipe** f)//N - кол-во разбиений
+{
+	mytipe I = 0.;
+
+	for (int i = 0; i < Nx; i++)
+		for (int j = 0; j < Ny; j++)
+			I += 0.25*hx*hy*(f[i][j] + f[i][j + 1] + f[i + 1][j] + f[i + 1][j + 1]);
+
+	return I;
+}
+
+void vivod(const int dim, const mytipe* const b) //процедура вывода столбца
+{
+	std::cout << '(';
+	for (int i = 0; i < dim; i++)
+	{
+		std::cout << b[i];
+		if (i < dim - 1) { std::cout << ','; } //красивая запись
+	}
+	std::cout << ")^т\n";
+}							

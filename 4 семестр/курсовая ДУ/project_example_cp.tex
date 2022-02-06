@@ -1,0 +1,459 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[cp1251]{inputenc}
+\usepackage[T2A]{fontenc}
+\usepackage[russian]{babel}
+
+\usepackage{hyperref}
+
+
+\usepackage[footnotes,oglav,spisok,boldsect,eqwhole,figwhole,kursrab,remarks,hyperprint,greekup]{project_cp}
+
+\begin{document}
+\cover{Дифференциальные уравнения}{Подводный старт ракеты}{студент группы ФН2-41}{Разумов Т.Е.}{профессор кафедры ФН-2}{Кувыркин Г.Н.}{}{}{2017}
+
+
+\tableofcontents
+
+
+\newpage
+\section-{Введение}
+\section{Постановка задачи}
+Исследовать вертикальное движение баллистической ракеты на подводном участке траектории после ее выталкивания на глубине $H_0$ с начальной скоростью $v_0$ из стартовой шахты подводной лодки. Сила сопротивления движению ракеты в воде $F=kv^n$, где $k$ - коэффициент сопротивления, $v$ - скорость, $n>0$. На глубине $H_1\le H_0$ включается ракетный двигатель, развивающий силу тяги $P=P_0-aH$, где $P_0$ - сила тяги на поверхости воды, $H$ - текущее значение глубины, $a>0$. Объем $V_0$ и массу $m_0$ ракеты принять постоянными на подводном участке траектории.
+
+Построить матеатическую модель вертикального движения ракеты и получить точное аналитическое решение при $n=1,2$. Провести численный анализ этой модели при $n=7/4$ и согласованых с руководителем значениях остальных параметров.
+\section{Решение}
+\subsection{Дифференциальное уравнение, описывающее движение для произвольного $n$}
+\begin{center}
+\figbox{10cm}{7cm}{1.jpg}{}[Силы, действующие на ракету]
+\end{center}
+
+
+Баллистическая ракета совершает поступательное движение, следовательно, получив закон движения одной материальной точки,
+мы опишем закон движения для всей ракеты. Тело совершает движение в инерциальной системе отсчета, векторное дифферинциальное уравнение имеет вид:
+\[m \vec{a}= \vec{F}_{\text{арх}}+m \vec{g}+\vec{P}+\vec{R}_{\text{сопр}}.\eqno(2.1.1)\]
+В проекции на вертикальную ось, направленную вниз, это уравнение имеет вид
+\[m\frac{d^2H}{dt^2}=m\frac{dv}{dt}=mg+R_{\text{сопр}}-F_{\text{арх}}-P,\eqno(2.1.2)\]
+т.к. масса и объем ракеты по условию приняты постоянными, то для удобства в дальнейших вычислениях обозначим величину $mg-F_{\text{арх}}=$const, буквой $C$. Поскольку $R_{\text{сопр}}=kv^n$, то \[m\frac{dv}{dt}=C+kv^n-P.\eqno(2.1.3)\]
+\subsection{Решение при $n=1$ и отсутствии силы тяги}
+Пусть $n=1$, $H_1\leqslant H\leqslant H_0\Rightarrow$ ракетный двигатель выключен, т.е. $P\equiv 0$, тогда $m\frac{dv}{dt}=C+kv$ - уравнение с разделяющимися переменными.\\
+Найдем $v(t)$ и $H(t)$:
+\[\frac{dv}{C+kv}=\frac{dt}{m},\]
+\[\frac{1}{k} \ln{|C+kv|}=\frac{t}{m}+C_1.\]
+С помощью начальных условий при $t=0$ $v=v_0$ найдем неизвестную $C_1$:
+\[\frac{1}{k} \ln{|C+kv_0|}=C_1,\]
+\[\frac{1}{k} \ln{|C+kv|}=\frac{t}{m}+\frac{1}{k}\ln{|C+kv_0|},\]
+\[\frac{1}{k} \ln{\biggl{|}\frac{C+kv}{C+kv_0}\biggr{|}}=\frac{t}{m},\]
+\[\ln{\biggl{|}\frac{C+kv}{C+kv_0}\biggr{|}}=\frac{k}{m}t,\]
+\[\frac{dH}{dt}=v(t)=\frac{C+kv_0}{k}\exp{\Bigl{(}\frac{k}{m}t\Bigr{)}}-\frac{C}{k}.\eqno(2.2.1)\]
+Для того, чтобы уменьшить количество неизвестных параметров, приведем решение к безразмерному виду:
+\[v^*=\frac{v}{v_0}=(\frac{C}{kv_0}+1)\exp{(-t^*)}-\frac{C}{kv_0},\]
+где $-t^*=\frac{k}{m}t$. Знак минус берется в силу того, что $k<0$ для $n=1$, т.к. при проекции дифференциального уравнения на ось направленную вниз, отрицательность скорости означает движение ракеты вверх, а т.к. вектор силы сопротивления движению всегда направлен в противоположную сторону к вектору скорости, следовательно при $F_\text{сопр}=kv$ коэффициент пропорциональности $k<0$ (при n=1). Следовательно решение данного дифференциального уравнения в безразмерном виде:
+\[v^*(t^*)=(A+1)\exp{(-t^*)}-A,\]
+где $v^*=\frac{v}{v_0};t^*=-\frac{k}{m}t;A=\frac{C}{kv_0}$.\\Рассмотрим графики решения при различных значениях параметра А:
+\begin{center}
+\picbox{5cm}{5cm}{+a}{A=2} 
+\picbox{5cm}{5cm}{-a}{A=-2}
+\picbox{5cm}{5cm}{0}{A=0}
+\figcap[Графики решения при различных значениях параметров]{}
+\end{center}
+\[H=\int{\biggl{(}\frac{C+kv_0}{k}\exp{\Bigl{(}\frac{k}{m}t\Bigr{)}}-\frac{C}{k}\biggr{)}}{dt}=\frac{m(C+kv_0)}{k^2}\exp{\Bigl{(}\frac{k}{m}t\Bigr{)}}-\frac{C}{k}t+C_2.\]
+С помощью начальных условий при $t=0$ $H=H_0$ найдем неизвестное $C_2$:
+\[H_0=\frac{m(C+kv_0)}{k^2}+C_2,\]
+\[C_2=H_0-\frac{m(C+kv_0)}{k^2},\]
+\[H=\frac{m(C+kv_0)}{k^2}\exp{\Bigl{(}\frac{k}{m}t\Bigr{)}}-\frac{C}{k}t+H_0-\frac{m(C+kv_0)}{k^2},\]
+\[H(t)=\frac{m(C+kv_0)}{k^2}\Bigl{(}\exp{\Bigl{(}\frac{k}{m}t\Bigr{)}}-1\Bigr{)}-\frac{C}{k}t+H_0.\eqno(2.2.2)\]
+Для того, чтобы уменьшить количество неизвестных параметров, приведем наше решение к безразмерному виду:
+\[\frac{H(t)}{H_0}=\biggl{(}\frac{mC}{k^2H_0}+\frac{mv_0}{kH_0}\biggr{)}\exp{\Bigl{(}\frac{k}{m}t\Bigr{)}}-1\Bigr{)}-\frac{C}{kH_0}t+1,\]
+\[-t^*=\frac{k}{m}t\Rightarrow t^*=-\frac{k}{m}t,\]
+\[H^*(t^*)=(A+B)(\exp{(-t^*)}-1)+At^*+1.\]
+\begin{center}
+\picbox{5cm}{5cm}{HHT104}{A=10,B=4} 
+\picbox{5cm}{5cm}{H-32}{A=-3,B=2}
+\picbox{5cm}{5cm}{HHt005}{A=0,B=0.5}
+\figcap[Графики решения при различных значениях параметров]{}
+\end{center}
+Найдем время $t_1$ и скорость $v_1$, за которое ракета достигнет высоты $H_1$.
+
+ Так как из уравнения (2.2.2) нельзя однозначно выразить переменное $t$, то воспользуемся разложением функции $f(t)=\exp{\Bigl{(}\frac{k}{m}t\Bigr{)}}$ в ряд Маклорена: $f(t)=1+\frac{k}{m}t+o(t)$. Пренебрегая малыми слагаемыми преобразуем формулу (2.2.2):
+\[H=\frac{m(C+kv_0)}{k^2}\Bigl{(}\exp{\Bigl{(}\frac{tk}{m}\Bigr{)}}-1\Bigr{)}-\frac{C}{k}t+H_0\approx\frac{m(C+kv_0)}{k^2}\Bigl{(}1+\frac{k}{m}t-1\Bigr{)}-\frac{C}{k}t+H_0=\]
+\[=\frac{m(C+kv_0)}{k^2}\Bigl{(}\frac{k}{m}t\Bigr{)}-\frac{C}{k}t+H_0=\frac{(c+kv_0)}{k}t-\frac{C}{k}t+H_0=\frac{c}{k}t+v_0t-\frac{C}{k}t+H=v_0t+H_0.\]
+Тогда при $H=H_1$ $t_1\approx\frac{H_1-H_0}{v_0}$. Из уравнененя (1.1) выразм $v_1$: \[v_1\approx\frac{C+kv_0}{k}\exp{\Bigl{(}\frac{k}{m}t_1\Bigr{)}}-\frac{C}{k}.\]
+
+
+Найдем зависимость $H(v)$; для этого преобразуем уравниение $m\frac{dv}{dt}=C+kv$:
+\[\frac{dv}{dt}\frac{dH}{dH}=v\frac{dv}{dH}\Rightarrow v\frac{dv}{dH}=\frac{C+kv}{m}\text{ - уравнение с разделяющимися переменными,}\]
+\[\frac{vdv}{C+kv}=\frac{dH}{m},\]
+\[\frac{C+kv-C}{k(C+kv)}dv=\frac{dH}{m},\]
+\[\Bigl{(}\frac{1}{k}-\frac{C}{k(C+kv)}\Bigr{)}dv=\frac{dH}{m},\]
+\[\frac{v}{k}-\frac{C}{k^2}\ln{|C+kv|}=\frac{H}{m}+C_3.\]
+С помощью начальных условий при  $H=H_0$ $v=v_0$ найдем неизвестное $C_3$,
+\[C_3=\frac{v_0}{k}-\frac{C}{k^2}\ln{|C+kv_0|}-\frac{H_0}{m},\]
+\[H=m\Bigl{(}\frac{v}{k}-\frac{C}{k^2}\ln{|C+kv|}-\frac{v_0}{k}+\frac{C}{k^2}\ln{|C+kv_0|}+\frac{H_0}{m}\Bigr{)},\]
+\[H(v)=\frac{m(v-v_0)}{k}+\frac{Cm}{k^2}\ln{\biggl{|}\frac{C+kv_0}{C+kv}\biggr{|}}+H_0.\eqno(2.2.3)\]
+Для того, чтобы уменьшить число неизвестных параметров, приведем решение к безразмерному виду:
+\[\frac{H}{H_0}=\frac{v_0m(\frac{v}{v_0}-1)}{kH_0}-\frac{Cm}{H_0k^2}\ln{\biggl{|}\frac{\frac{1}{v_0}(\frac{C}{k}+v)}{\frac{1}{v_0}(\frac{C}{k}+v_0)}\biggr{|}}+1=\frac{v_0m(\frac{v}{v_0}-1)}{kH_0}-\frac{Cmv_0}{H_0v_0k^2}\ln{\biggl{|}\frac{\frac{C}{kv_0}+\frac{v}{v_0}}{\frac{C}{kv_0}+1}\biggr{|}}+1,\]
+\[H^*=A(v^*-1)-AB\ln{\biggl{|}\frac{B+v^*}{B+1}\biggr{|}}+1.\]
+\begin{center}
+\picbox{5cm}{5cm}{2,10}{A=0.6,B=10} 
+\picbox{5cm}{5cm}{20,-10}{A=20,B=-10}
+\picbox{5cm}{5cm}{5,0}{A=100,B=0}
+\figcap[Графики решения при различных значениях параметров]{}
+\end{center}
+\subsection{Решение при $n=1$ и с силой тяги}
+Теперь пусть $H\leqslant H_1\Rightarrow$ влючился ракетный двигатель, т.е. $P=P_0-aH$,
+\[m\frac{dv}{dt}=C+kv-P_0+aH.\]
+Найдем $v(t)$ и $H(t)$ 
+\[\frac{d^2H}{dt^2}=\frac{C-P_0}{m}+\frac{kdH}{mdt}+\frac{a}{m}H,\]
+\[\frac{d^2H}{dt^2}-\frac{kdH}{mdt}-\frac{a}{m}H=\frac{C-P_0}{m}\text{ - диф. ур. второго порядка с квазимногочленом в правой части.}\]
+$1)$Найдем корни характеристического уравнения:\\
+\[\lambda^2-\frac{k}{m}\lambda-\frac{a}{m}=0,\]
+\[D=\frac{k^2}{m^2}+4\frac{a}{m}>0\text{ (т.к. }a>0,m>0,k\ne 0),\]
+\[\lambda_{\text{1,2}}=\frac{\frac{k}{m}\pm\sqrt{\frac{k^2}{m^2}+4\frac{a}{m}}}{2}.\]
+ФСР: $\{C_1\exp{(\lambda_1 t)};C_2\exp{(\lambda_2 t)}\}$
+\[H_\text{о.о}=C_1\exp{(\lambda_1 t)}+C_2\exp{(\lambda_2 t)}.\]
+$2)$Комплексное число, соотвествующее нашему квазимногочлену $\mu=0$. Т.к. оно не совпадает ни с одним из корней характеристического уравнения, то его кратность $r=0$. Максимальная степень многочлена $\deg P = 0$. Значит, $H_\text{ч.н}=B$. Подставляя неизвестное $B$ в дифферинциальное уравнение получаем $-\frac{a}{m}B=\frac{C-P_0}{m}$, откуда $B=\frac{P_0-C}{a}$. Тогда
+\[H_\text{о.н}=C_1\exp{(\lambda_1 t)}+C_2\exp{(\lambda_2 t)}+\frac{P_0-C}{a}.\]
+С помощью начальный условий $t=t_1$ $H=H_1$ $v=v_1$ найдем неизвестные $C_1,C_2$:
+\begin{multline}
+\begin{cases}
+H_1=C_1\exp{(\lambda_1 t_1)}+C_2\exp{(\lambda_2 t_1)}+\frac{P_0-C}{a},\\
+v_1=C_1\lambda_1\exp{(\lambda_1 t_1)}+C_2\lambda_2\exp{(\lambda_2 t_1)},
+\end{cases}
+\Rightarrow C_1=\frac{v_1-\lambda_2\frac{(H_1-\frac{P_0-C}{a})\lambda_1-v_1}{\lambda_1-\lambda_2}}{\lambda_1\exp{(\lambda_1 t_1)}},\\
+C_2=\frac{\lambda_1(H_1-\frac{P_0-C}{a})-v_1}{\exp{(\lambda_2 t_1)}(\lambda_1-\lambda_2)},\nonumber
+\end{multline}
+\[H(t)=\biggl{(}\frac{v_1}{\lambda_1}-\frac{\lambda_2}{\lambda_1}\biggl{(}\frac{(H_1-\frac{P_0-C}{a})\lambda_1-v_1}{\lambda_1-\lambda_2}\biggr{)}\biggr{)}\exp{(\lambda_1 (t-t_1))}+\]
+\[+\frac{\lambda_1(H_1-\frac{P_0-C}{a})-v_1}{\lambda_1-\lambda_2}\exp{(\lambda_2 (t-t_1))}+\frac{P_0-C}{a}.\eqno(2.3.1)\]
+%Hlamb4-2030
+Для того, чтобы уменьшить количество неизвестных параметров, приведем решение к безразмерному виду:
+\[\frac{H}{H_1}=H^*=A\exp{(t^*)}+B\exp{(-t^*)}+D.\]
+\begin{center}
+\picbox{5cm}{5cm}{lambda-2-58}{A=-2,B=-5,D=8} 
+\picbox{5cm}{5cm}{lambda24-5}{A=2,B=4,D=-5}
+\picbox{5cm}{5cm}{lamb-15-1228}{A=-15,B=-12,D=28}
+\figcap[Графики решения при различных значениях параметров]{}
+\end{center}
+Во втором слагаемом перед $t^*$ присутствует минуc, т.к. $\lambda_2<0$
+Так как $v=\frac{dH}{dt}$, то
+\[v(t)=\biggl{(}v_1-\lambda_2\frac{(H_1-\frac{P_0-C}{a})\lambda_1-v_1}{\lambda_1-\lambda_2}\biggr{)}\exp{(\lambda_1 (t-t_1))}+\lambda_2\frac{(H_1-\frac{P_0-C}{a})\lambda_1-v_1}{\lambda_1-\lambda_2}\exp{(\lambda_2 (t-t_1))}.\eqno(2.3.2)\]
+Для того, чтобы уменьшить число неизвестных параметров, приведем решение к безразмерному виду:
+\[\frac{v}{v_0}=\biggl{(}1-\lambda_2\frac{(H_1-\frac{P_0-C}{a})\lambda_1-v_1}{(\lambda_1-\lambda_2)v_1}\biggr{)}\exp{(\lambda_1 (t-t_1))}+\lambda_2\frac{(H_1-\frac{P_0-C}{a})\lambda_1-v_1}{(\lambda_1-\lambda_2)v_1}\exp{(\lambda_2 (t-t_1))},\]
+\[v^*(t^*)=(1-A)\exp{(t^*)}+A\exp{(-t^*)}.\]
+\begin{center}
+\picbox{5cm}{5cm}{p,v,-5}{A=-5} 
+\picbox{5cm}{5cm}{q=2}{A=2}
+\picbox{5cm}{5cm}{q=08}{A=0.8}
+\figcap[Графики решения при различных значениях параметров]{}
+\end{center}
+Найдем зависимость $H(v)$:
+\[mv\frac{dv}{dH}=C+kv-P_0+aH,\]
+\[\frac{dv}{dH}=\frac{aH+kv-P_0+C}{mv}\text{  - уравнение, приводящееся к однородному,}\]
+\[
+\begin{vmatrix}
+a & k\\
+0 & m
+\end{vmatrix}
+=am\ne 0\Rightarrow
+\begin{cases}
+aH+kv-P_0+C=0,\\
+mv=0,
+\end{cases}
+\Rightarrow v^*=0;H^*=-\frac{C-P_0}{a}.
+\] 
+\[\text{Замена } h=H-H^*; dh=dH:\]
+\[\frac{dv}{dh}=\frac{ah+kv}{mv}=\frac{ah}{mv}+\frac{k}{m}.\]
+\[\text{Замена } h=vu(v); \frac{dh}{dv}=u(v)+v\frac{du}{dv},\]
+\[u+v\frac{du}{dv}=\frac{mv}{kv+auv},\]
+\[u+v\frac{du}{dv}=\frac{m}{k+au},\]
+\[\frac{du}{dv}=\frac{m-au^2-ku}{v(k+au)},\]
+\[\int{\frac{k+au}{m-au^2-ku}}{du}=\int{\frac{dv}{v}}.\]
+Рассмотрим левую часть выражения
+\[\int{\frac{k+au}{m-au^2-ku}}{du}=\int{\frac{k+au}{\frac{k^2}{4a}-(\sqrt{a}u+\frac{k}{2\sqrt{a}})^2+m}}{du}.\]
+Замена $x=\sqrt{a}u+\frac{k}{2\sqrt{a}}\Rightarrow u=\frac{1}{\sqrt{a}}(x-\frac{k}{2\sqrt{a}});dx=\sqrt{a}du\Rightarrow du=\frac{dx}{\sqrt{a}},$
+\[\frac{1}{\sqrt{a}}\int{\frac{a(\frac{x}{\sqrt{a}}-\frac{k}{2a})+k}{\frac{k^2}{4a}+m-x^2}}{dx}=\frac{1}{\sqrt{a}}\int{\frac{\sqrt{a}x-\frac{k}{2}+k}{\frac{k^2}{4a}+m-x^2}}{dx}=2\frac{a}{\sqrt{a}}\int{\frac{2\sqrt{a}x+k}{k^2+4am-4ax^2}}{dx}=\]
+\[=2\sqrt{a}\biggl{(}\int{\frac{2\sqrt{a}x}{k^2+4am-4ax^2}}{dx}+\int{\frac{k}{k^2+4am-4ax^2}}{dx}\biggr{)},\]
+\begin{multline*}\int{\frac{2\sqrt{a}x}{k^2+4am-4ax^2}}{dx}=\sqrt{a}\int{\frac{d(x^2)}{k^2+4am-4ax^2}}=-\frac{\sqrt{a}}{4a}\ln{|k^2+4am-4ax^2|}=\\=-\frac{1}{4\sqrt{a}}\ln{|k^2+4am-4ax^2|},\end{multline*}
+\begin{multline*}\int{\frac{k}{k^2+4am-4ax^2}}{dx}=\frac{k}{4a}\int{\frac{dx}{\frac{k^2}{4a}+m-x^2}}=\frac{k}{8a\sqrt{m+\frac{k^2}{4a}}}\ln{\biggl{|}\frac{x+\sqrt{m+\frac{k^2}{4a}}}{x-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}\\=\ln{\biggl{|}\frac{x+\sqrt{m+\frac{k^2}{4a}}}{x-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{k}{8a\sqrt{m+\frac{k^2}{4a}}},\end{multline*}
+\[2\sqrt{a}\biggl{(}-\frac{1}{4\sqrt{a}}\ln{|k^2+4am-4ax^2|}+\ln{\biggl{|}\frac{x+\sqrt{m+\frac{k^2}{4a}}}{x-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{k}{8a\sqrt{m+\frac{k^2}{4a}}}\biggr{)}=-\frac{1}{2}\ln{|k^2+4am-4ax^2|}+\]
+\[+2\sqrt{a}\ln{\biggl{|}\frac{x+\sqrt{m+\frac{k^2}{4a}}}{x-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{k}{4\sqrt{4ma^2+ak^2}}=\ln{|k^2+4am-4ax^2|^{-\frac{1}{2}}}+\ln{\biggl{|}\frac{x+\sqrt{m+\frac{k^2}{4a}}}{x-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{2k\sqrt{a}}{4\sqrt{4ma^2+ak^2}}=\]
+\[=\ln{|k^2+4am-4ax^2|^{-\frac{1}{2}}}+\ln{\biggl{|}\frac{x+\sqrt{m+\frac{k^2}{4a}}}{x-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{k}{2\sqrt{4ma+k^2}},\]
+\[\ln{|k^2+4am-4ax^2|^{-\frac{1}{2}}}+\ln{\biggl{|}\frac{x+\sqrt{m+\frac{k^2}{4a}}}{x-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{k}{2\sqrt{4ma+k^2}}=\ln{|v|}+C_3,\]
+\[\ln{|k^2+4am-4a(\sqrt{a}u+\frac{k}{2\sqrt{a}})^2|^{-\frac{1}{2}}}+\ln{\biggl{|}\frac{\sqrt{a}u+\frac{k}{2\sqrt{a}}+\sqrt{m+\frac{k^2}{4a}}}{\sqrt{a}u+\frac{k}{2\sqrt{a}}-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{k}{2\sqrt{4ma+k^2}}=\ln{|v|}+C_3,\]
+\[\ln{|k^2+4am-4a(au^2+ku+\frac{k^2}{4a})|^{-\frac{1}{2}}}+\ln{\biggl{|}\frac{\sqrt{a}u+\frac{k}{2\sqrt{a}}+\sqrt{m+\frac{k^2}{4a}}}{\sqrt{a}u+\frac{k}{2\sqrt{a}}-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{k}{2\sqrt{4ma+k^2}}=\ln{|v|}+C_3,\]
+\[\ln{|4a(m-ku-au^2)|^{-\frac{1}{2}}}+\ln{\biggl{|}\frac{\sqrt{a}u+\frac{k}{2\sqrt{a}}+\sqrt{m+\frac{k^2}{4a}}}{\sqrt{a}u+\frac{k}{2\sqrt{a}}-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{k}{2\sqrt{4ma+k^2}}=\ln{|v|}+C_3,\]
+Обратная замена $u=\frac{H-H^*}{v}$:
+\[\ln{|4a(m-k\frac{H-H^*}{v}-a\frac{(H-H^*)^2}{v^2})|^{-\frac{1}{2}}}+\ln{\biggl{|}\frac{\sqrt{a}\frac{H-H^*}{v}+\frac{k}{2\sqrt{a}}+\sqrt{m+\frac{k^2}{4a}}}{\sqrt{a}\frac{H-H^*}{v}+\frac{k}{2\sqrt{a}}-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{k}{2\sqrt{4ma+k^2}}=\ln{|v|}+C_3.\]
+С помощью начальных условий $H=H_1$ $v=v_1$ найдем неизвестное $C_3$:
+\[C_3=-\ln{|v_1|}+\ln{|4a(m-k\frac{H_1-H^*}{v_1}-a\frac{(H_1-H^*)^2}{v_1^2})|^{-\frac{1}{2}}}+\ln{\biggl{|}\frac{\sqrt{a}\frac{H_1-H^*}{v_1}+\frac{k}{2\sqrt{a}}+\sqrt{m+\frac{k^2}{4a}}}{\sqrt{a}\frac{H_1-H^*}{v_1}+\frac{k}{2\sqrt{a}}-\sqrt{m+\frac{k^2}{4a}}}\biggr{|}}^\frac{k}{2\sqrt{4ma+k^2}}.\]
+Тогда уравнение примет вид
+\[\ln{\biggl{|}\frac{(\sqrt{a}\frac{H-H^*}{v}+\frac{k}{2\sqrt{a}}+\sqrt{m+\frac{k^2}{4a}})(\sqrt{a}\frac{H_1-H^*}{v_1}+\frac{k}{2\sqrt{a}}-\sqrt{m+\frac{k^2}{4a}})}{(\sqrt{a}\frac{H-H^*}{v}+\frac{k}{2\sqrt{a}}-\sqrt{m+\frac{k^2}{4a}})(\sqrt{a}\frac{H_1-H^*}{v_1}+\frac{k}{2\sqrt{a}}+\sqrt{m+\frac{k^2}{4a}})}\biggr{|}}^\frac{k}{2\sqrt{4ma+k^2}}+\]
+\[+\ln{\biggl{|}\frac{m-k\frac{H-H^*}{v}-a\frac{(H-H^*)^2}{v^2}}{m-k\frac{H_1-H^*}{v_1}-a\frac{(H_1-H^*)^2}{v_1^2}}\biggr{|}^{-\frac{1}{2}}}=\ln{\frac{|v|}{|v_1|}},\]
+\[\biggl{|}\frac{(\sqrt{a}\frac{H-H^*}{v}+\frac{k}{2\sqrt{a}}+\sqrt{m+\frac{k^2}{4a}})(\sqrt{a}\frac{H_1-H^*}{v_1}+\frac{k}{2\sqrt{a}}-\sqrt{m+\frac{k^2}{4a}})}{(\sqrt{a}\frac{H-H^*}{v}+\frac{k}{2\sqrt{a}}-\sqrt{m+\frac{k^2}{4a}})(\sqrt{a}\frac{H_1-H^*}{v_1}+\frac{k}{2\sqrt{a}}+\sqrt{m+\frac{k^2}{4a}})}\biggr{|}^\frac{k}{2\sqrt{4ma+k^2}}*\]
+\[*\biggl{|}\frac{m-k\frac{H_1-H^*}{v_1}-a\frac{(H_1-H^*)^2}{v_1^2}}{m-k\frac{H-H^*}{v}-a\frac{(H-H^*)^2}{v^2}}\biggr{|}^{\frac{1}{2}}=\frac{|v|}{|v_1|}.\eqno(2.2.3)\]
+\subsection{Решение при $n=2$ и отсутствии силы тяги}
+Решим исходное дифферинциальное уравнение при n=2. Пусть $H_1\leqslant H\leqslant H_0\Rightarrow$ ракетный двигатель выключен, т.е. $P\equiv 0$.
+Найдем зависимость $H(v)$:\\$mv\frac{dv}{dH}=C+kv^2$-уравнение с разделяющимися переменными.
+\[\frac{md(v^2)}{2(C+kv^2)}=dH\Rightarrow H=\frac{m}{2k}\ln{|C+kv^2|}+C_1.\]
+С помощью начальных условий при $H=H_0$ $v=v_0$ найдем неизвестное $C_1$:
+\[C_1=H_0-\frac{m}{2k}\ln{|C+kv_0^2|}\Rightarrow H=\frac{m}{2k}\ln{|C+kv^2|}+H_0-\frac{m}{2k}\ln{|C+kv_0^2|},\] 
+\[H(v)=\frac{m}{2k}\ln{\biggl{|}\frac{C+kv^2}{C+kv_0^2}\biggr{|}}+H_0.\eqno(2.4.1)\]
+Для того, чтобы уменьшить количество неизвестных параметров, приведем решение к безразмерному виду:
+\[\frac{H(v)}{H_0}=\frac{m}{2kH_0}\ln{\biggl{|}\frac{\frac{C}{v_0^2}+\frac{v^2}{v_0^2}}{\frac{C}{v_0^2}+1}\biggr{|}}+1,\]
+\[H^*(v^*)=A\ln{\biggl{|}\frac{B+v^*}{B+1}\biggr{|}}+1.\]
+\begin{center}
+\picbox{5cm}{5cm}{n2v22}{A=2,B=2} 
+\picbox{5cm}{5cm}{n220-10}{A=20,B=-10}
+\picbox{5cm}{5cm}{n2050}{A=0.5,B=0}
+\figcap[Графики решения при различных значениях параметров]{}
+\end{center}
+Найдем скорость $v_1$, которую разовьет ракета,когда достигнет высоту $H_1$:
+\[H_1=\frac{m}{2k}\ln{\biggl{|}\frac{C+kv_1^2}{C+kv_0^2}\biggr{|}}+H_0,\]
+\[\frac{2k(H_1-H_0)}{m}=\ln{\biggl{|}\frac{C+kv_1^2}{C+kv_0^2}\biggr{|}},\]
+\[\frac{C+kv_1^2}{C+kv_0^2}=\exp{\frac{2k(H_1-H_0)}{m}},\]
+\[C+kv_1^2=(C+kv_0^2)\exp{\frac{2k(H_1-H_0)}{m}}\Rightarrow v_1=\sqrt{\frac{(C+kv_0^2)\exp{\frac{2k(H_1-H_0)}{m}}}{k}-\frac{C}{k}}.\]
+Найдем $v(t)$ и $H(t)$: \[m\frac{dv}{dt}=C+kv^2\text{ - уравнение с разделяющимися переменными},\]
+\[\frac{dv}{C+kv^2}=\frac{dt}{m}.\]
+Данное уравнение имеет различные решения, зависящие от знака параметра $C$. 
+\subsubsection{Решение при $mg>F_\text{арх}(C>0)$}
+Рассмотрим случай когда $C>0$:
+\[\frac{dv}{C+kv^2}=\frac{dt}{m},\]
+\[\frac{\arctan{\biggl{(}\sqrt{\frac{k}{C}}v\biggr{)}}}{\sqrt{Ck}}=\frac{t}{m}+C_2.\]	
+С помощью начальных условий при $t=0$ $v=v_0$ найдем неизвестное $C_2$:
+\[C_2=\frac{\arctan{\biggl{(}\sqrt{\frac{k}{C}}v_0\biggr{)}}}{\sqrt{Ck}}\Rightarrow\frac{\arctan{\biggl{(}\sqrt{\frac{k}{C}}v\biggr{)}}}{\sqrt{Ck}}=\frac{t}{m}+\frac{\arctan{\biggl{(}\sqrt{\frac{k}{C}}v_0\biggr{)}}}{\sqrt{Ck}},\]
+\[\arctan{\biggl{(}\sqrt{\frac{k}{C}}v\biggr{)}}=\frac{\sqrt{Ck}}{m}t+\arctan{\biggl{(}\sqrt{\frac{k}{C}}v_0\biggr{)}}.\]
+Для удобства в дальнейм изложении обозначим $B=\arctan{\biggl{(}\sqrt{\frac{k}{C}}v_0\biggr{)}}$:
+\[\sqrt{\frac{k}{C}}v=\tan{\biggl{(}\frac{\sqrt{Ck}}{m}t+B\biggr{)}},\]
+\[v(t)=\frac{dH}{dt}=\sqrt{\frac{C}{k}}\tan{\biggl{(}\frac{\sqrt{Ck}}{m}t+B\biggr{)}}.\eqno(2.4.2)\]
+В безразмерном виде
+\[v^*(t^*)=A\tan{(\frac{t^*}{2}+B)}.\]
+\begin{center}
+\picbox{5cm}{5cm}{C0+}{$A=-\sqrt{3},B=-(\frac{\pi}{6}+\frac{1}{2})$} 
+\picbox{5cm}{5cm}{C0++}{$A=-\frac{\sqrt{3}}{3},B=-(\frac{\pi}{3}+\frac{1}{2})$}
+\figcap[Графики решения при различных значениях параметров]{}
+\end{center}
+\[\int{dH}=\int{\sqrt{\frac{C}{k}}\tan{\biggl{(}\frac{\sqrt{Ck}}{m}t+B\biggr{)}}}{dt},\]
+\[H=-\frac{m}{\sqrt{Ck}}\sqrt{\frac{C}{k}}\ln{\biggl{|}\cos{\biggl{(}\frac{\sqrt{Ck}}{m}t+B\biggr{)}}\biggr{|}}+C_3=-\frac{m}{k}\ln{\biggl{|}\cos{\biggl{(}\frac{\sqrt{Ck}}{m}t+B\biggr{)}}\biggr{|}}+C_3.\]
+С помощью начальных условий при $t=0$ $H=H_0$ найдем неизвестное $C_3$:
+\[C_3=H_0+\frac{m}{k}\ln{|\cos{(B)}|}\Rightarrow H=-\frac{m}{k}\ln{\biggl{|}\cos{\biggl{(}\frac{\sqrt{Ck}}{m}t+B\biggr{)}}\biggr{|}}+H_0+\frac{m}{k}\ln{|\cos{(B)}|},\]
+\[H(t)=\frac{m}{k}\ln{\biggl{|}\frac{\cos{(B)}}{\cos{\biggl{(}\frac{\sqrt{Ck}}{m}t+B\biggr{)}}}\biggr{|}}+H_0.\eqno(2.4.3)\]
+В безразмерном виде:
+\[\frac{H}{H_0}=H^*(t^*)=A\ln{\biggl{|}\frac{\cos{(B)}}{\cos{\biggl{(}t^*+B\biggr{)}}}\biggr{|}}+1,\]
+где $B=\arctan{\biggl{(}\sqrt{\frac{k}{C}}v_0\biggr{)}},t^*=\frac{\sqrt{Ck}}{m},A=\frac{m}{kH_0}.$
+\begin{center}
+\picbox{5cm}{5cm}{1}{$A=0,2;B=-\frac{\pi}{6}$} 
+\picbox{5cm}{5cm}{2}{$A=6;B=-\frac{\pi}{3}$} 
+\picbox{5cm}{5cm}{3}{$A=20;B=-\frac{\pi}{20}$} 
+\figcap[Графики решения при различных значениях параметров]{}
+\end{center}
+Найдем время $t_1$ за которое ракета достигнет высоты $H_1$:
+\[H_1=-\frac{m}{k}\ln{\biggl{(}\cos{\biggl{(}\frac{\sqrt{Ck}}{m}t^*+B\biggr{)}}\biggr{)}}+H_0+\frac{m}{k}\ln{(\cos{(B)})},\]
+\[-(H_1-H_0-\frac{m}{k}\ln{(\cos{(B)})})\frac{k}{m}=\ln{\biggl{(}\cos{\biggl{(}\frac{\sqrt{Ck}}{m}t^*+B\biggr{)}}\biggr{)}},\]
+\[\arccos{\biggl{(}\exp{\biggl{(}(H_0-H_1)\frac{k}{m}+\ln{(\cos{(B)})}\biggr{)}}\biggr{)}}=\frac{\sqrt{Ck}}{m}t^*+B,\]
+\[t_1=\frac{m}{\sqrt{Ck}}(\arccos{(\exp{((H_0-H_1)\frac{k}{m}+\ln{(\cos{B})})})}-B).\]
+\subsubsection{Решение при $mg<F_\text{арх}(C<0)$}
+Теперь рассмотрим случай, когда $C<0$.
+
+Обозначим $C=-b$, тогда уравнение примет вид
+\[\frac{dv}{kv^2-b}=\frac{dt}{m}.\]
+Разложим дробь $\frac{1}{kv^2-b}$ на простейшие:
+\[\frac{1}{kv^2-b}=\frac{A}{\sqrt{k}v-\sqrt{b}}+\frac{B}{\sqrt{k}v+\sqrt{b}}=\frac{(\sqrt{k}v+\sqrt{b})A+(\sqrt{k}v-\sqrt{b})B}{kv^2-b},\]
+\[
+\begin{cases}
+v:\sqrt{k}A+\sqrt{k}B=0,\\
+v^0:\sqrt{b}A+\sqrt{b}B=1,
+\end{cases}
+\Rightarrow A=\frac{1}{2\sqrt{b}};B=-\frac{1}{2\sqrt{b}}.
+\]
+Тогда дифферинициальное уравнение примет вид
+\[\biggl{(}\frac{1}{2(\sqrt{kb}v-b)}-\frac{1}{2(\sqrt{kb}v+b)}\biggr{)}dv=\frac{dt}{m},\]
+\[\frac{m}{2\sqrt{kb}}\ln{|\sqrt{kb}v-b|}-\ln{|\sqrt{kb}v+b|}=t+C_2\]
+\[\frac{m}{2\sqrt{kb}}\ln{\biggl{|}\frac{\sqrt{kb}v-b}{\sqrt{kb}v+b}\biggr{|}}=t+C_2,\]
+\[\frac{m}{2\sqrt{kb}}\ln{\biggl{|}\frac{\sqrt{kb}v+b-2b}{\sqrt{kb}v+b}\biggr{|}}=t+C_2,\]
+\[\frac{m}{2\sqrt{kb}}\ln{\biggl{|}1-\frac{2b}{\sqrt{kb}v+b}\biggr{|}}=t+C_2.\]
+С помощью начальных условий при $t=0$ $v=v_0$ найдем неизвестное $C_2$:
+\[\frac{m}{2\sqrt{kb}}\ln{\biggl{|}1-\frac{2b}{\sqrt{kb}v_0+b}\biggr{|}}=C_2.\]
+Тогда
+\[\frac{m}{2\sqrt{kb}}\ln{\Biggl{|}\frac{1-\frac{2b}{\sqrt{kb}v+b}}{1-\frac{2b}{\sqrt{kb}v_0+b}}\Biggr{|}}=t,\]
+\[\ln{\Biggl{|}\frac{1-\frac{2b}{\sqrt{kb}v+b}}{1-\frac{2b}{\sqrt{kb}v_0+b}}\Biggr{|}}=\frac{2\sqrt{kb}}{m}t,\]
+\[\frac{1-\frac{2b}{\sqrt{kb}v+b}}{1-\frac{2b}{\sqrt{kb}v_0+b}}=\exp(\frac{2\sqrt{kb}}{m}t),\]
+\[1-\frac{2b}{\sqrt{kb}v+b}=(1-\frac{2b}{\sqrt{kb}v_0+b})\exp(\frac{2\sqrt{kb}}{m}t),\]
+\[\frac{2b}{\sqrt{kb}v+b}=1-(1-\frac{2b}{\sqrt{kb}v_0+b})\exp(\frac{2\sqrt{kb}}{m}t)\]
+\[\frac{\sqrt{kb}v+b}{2b}=\frac{1}{1-(1-\frac{2b}{\sqrt{kb}v_0+b})\exp(\frac{2\sqrt{kb}}{m}t)},\]
+\[\sqrt{kb}v+b=\frac{2b}{1-(1-\frac{2b}{\sqrt{kb}v_0+b})\exp(\frac{2\sqrt{kb}}{m}t)},\]
+\[v=\frac{2\sqrt{b}}{\sqrt{k}(1-(1-\frac{2b}{\sqrt{kb}v_0+b})\exp{(\frac{2\sqrt{kb}}{m}t)})}-\sqrt{\frac{b}{k}},\]
+\[v=\frac{2\sqrt{b}}{\sqrt{k}(1+(\frac{2b}{\sqrt{kb}v_0+b}-1)\exp{(\frac{2\sqrt{kb}}{m}t)})}-\sqrt{\frac{b}{k}}\]
+\[v=\frac{2\sqrt{b}}{\sqrt{k}(1+\frac{2b-\sqrt{kb}v_0-b}{\sqrt{kb}v_0+b}\exp{(\frac{2\sqrt{kb}}{m}t)})}-\sqrt{\frac{b}{k}},\]
+\[v(t)=\frac{2\sqrt{b}}{\sqrt{k}(1+\frac{b-\sqrt{kb}v_0}{\sqrt{kb}v_0+b}\exp{(\frac{2\sqrt{kb}}{m}t)})}-\sqrt{\frac{b}{k}}.\eqno(2.4.4)\]
+Для того, чтобы уменьшить количество неизвестных параметров, приведем решение к безразмерному виду:
+\[\frac{v}{v_0}=\frac{2}{v_0}\sqrt{\frac{b}{k}}\frac{1}{(1+\frac{1-\frac{1}{v_0}\sqrt{\frac{b}{k}}}{1+\frac{1}{v_0}\sqrt{\frac{b}{k}}}\exp{(\frac{2\sqrt{kb}}{m}t)})}-\frac{1}{v_0}\sqrt{\frac{b}{k}},\]
+\[v^*(t^*)=2A\frac{A+1}{(A+1+(A-1)\exp{t^*}}-A.\]
+\begin{center}
+\picbox{5cm}{5cm}{b-20}{$A=-20$} 
+\picbox{5cm}{5cm}{b-05}{$A=-\frac{1}{2}$}
+\figcap[Графики решения при различных значениях параметров]{}
+\end{center}
+Найдем зависимость $H(t)$:
+\[H=\int{\biggl{(}\frac{2\sqrt{b}}{\sqrt{k}(1+\frac{b-\sqrt{kb}v_0}{\sqrt{kb}v_0+b}\exp{(\frac{2\sqrt{kb}}{m}t)})}-\sqrt{\frac{b}{k}}\biggr{)}}{dt},\]
+\[H=\int{\frac{2\sqrt{b}}{\sqrt{k}(1+\frac{b-\sqrt{kb}v_0}{\sqrt{kb}v_0+b}\exp{(\frac{2\sqrt{kb}}{m}t)})}}{dt}-\int{\sqrt{\frac{b}{k}}}{dt}.\]
+Для удобства в дальнейших вычислениях обозначим $\xi=\frac{b-\sqrt{kb}v_0}{\sqrt{kb}v_0+b}$. Рассмотрим первый интеграл: 
+\[\int{\frac{2\sqrt{b}}{\sqrt{k}(1+\xi\exp{(\frac{2\sqrt{kb}}{m}t)})}}{dt}=\frac{2}{\xi}\sqrt{\frac{b}{k}}\int{\frac{dt}{(\frac{1}{\xi}+\exp{(\frac{2\sqrt{kb}}{m}t)})}}.\]
+Замена $z=\exp{(\frac{2\sqrt{kb}}{m}t)}; dz=\frac{2\sqrt{kb}}{m}\exp{(\frac{2\sqrt{kb}}{m}t)}dt\Rightarrow dt=\frac{m}{2\sqrt{kb}}\frac{dz}{z},$
+\[\frac{2}{\xi}\sqrt{\frac{b}{k}}\frac{m}{2\sqrt{kb}}\int{\frac{dz}{z(z+\frac{1}{\xi})}}=\frac{m}{k\xi}\int{\biggl{(}\frac{A}{z}+\frac{B}{z+\frac{1}{\xi}}\biggr{)}}{dz}=\frac{m}{k\xi}\int{\biggl{(}\frac{A(z+\frac{1}{\xi})+Bz}{z(z+\frac{1}{\xi})}\biggr{)}}{dz},\]
+\[
+\begin{cases}
+z:A+B=0,\\
+z^0:\frac{1}{\xi}A=1,
+\end{cases}
+\Rightarrow A=\xi;B=-\xi,
+\]
+\[\frac{m}{k\xi}\int{\biggl{(}\frac{\xi}{z}-\frac{\xi}{z+\frac{1}{\xi}}\biggr{)}}{dz}=\frac{m}{k\xi}(\xi\ln{z}-\xi\ln{(z+\frac{1}{\xi})})=\frac{m}{k}(\ln{z}-\ln{(z+\frac{1}{\xi})}).\]
+Обратная замена: $z=\exp{(\frac{2\sqrt{kb}}{m}t)};\xi=\frac{b-\sqrt{kb}v_0}{\sqrt{kb}v_0+b}$,
+\[H=\frac{m}{k}\biggl{(}\ln{\biggl{(}\exp{\biggl{(}\frac{2\sqrt{kb}}{m}t\biggr{)}}\biggr{)}}-\ln{\biggl{(}\exp{\biggl{(}\frac{2\sqrt{kb}}{m}t\biggr{)}}+\frac{\sqrt{kb}v_0+b}{b-\sqrt{kb}v_0}\biggr{)}}\biggr{)}-\int{\sqrt{\frac{b}{k}}}{dt},\]
+\[H(t)=\frac{m}{k}\frac{2\sqrt{kb}}{m}t-\frac{m}{k}\ln{\biggl{(}\exp{\biggl{(}\frac{2\sqrt{kb}}{m}t\biggr{)}}+\frac{\sqrt{kb}v_0+b}{b-\sqrt{kb}v_0}\biggr{)}}-\sqrt{\frac{b}{k}}t+C_3,\]
+\[H(t)=\sqrt{\frac{b}{k}}t-\frac{m}{k}\ln{\biggl{|}\exp{\biggl{(}\frac{2\sqrt{kb}}{m}t\biggr{)}}+\frac{\sqrt{kb}v_0+b}{b-\sqrt{kb}v_0}\biggr{|}}+C_3,\]
+Найдем неизвестное $C_3$ с помощью начальных условий $t=0$ $H=H_0$:
+\[C_3=H_0+\frac{m}{k}\ln{\biggl{|}1+\frac{\sqrt{kb}v_0+b}{b-\sqrt{kb}v_0}\biggr{|}}.\]
+Тогда
+\[H(t)=\sqrt{\frac{b}{k}}t+\frac{m}{k}\ln{\biggl{|}\frac{1+\frac{\sqrt{kb}v_0+b}{b-\sqrt{kb}v_0}}{\exp{\biggl{(}\frac{2\sqrt{kb}}{m}t\biggr{)}}+\frac{\sqrt{kb}v_0+b}{b-\sqrt{kb}v_0}}\biggr{|}}+H_0.\eqno(2.4.5)\]
+Для того, чтобы уменьшить количество неизвестных параметров, приведем решение к безразмерному виду:
+\[\frac{H}{H_0}=\sqrt{\frac{b}{k}}\frac{t}{H_0}+\frac{m}{kH_0}\ln{\biggl{|}\frac{2b}{(b-\sqrt{kb}v_0)\exp{\biggl{(}\frac{2\sqrt{kb}}{m}t\biggr{)}}+\sqrt{kb}v_0+b}\biggr{|}}+1,\]
+\[H^*=\frac{1}{2}At^*-A\ln{\biggl{|}\frac{(1-B)\exp{(t^*)+1+B}}{2}\biggr{|}}+1.\]
+\begin{center}
+\picbox{5cm}{5cm}{A2B-02}{$A=2;B=-0.2$} 
+\picbox{5cm}{5cm}{A20B-2}{$A=20;B=-2$}
+\figcap[Графики решения при различных значениях параметров]{}
+\end{center}
+\subsubsection{Решение при $mg=F_\text{арх}(C=0)$}
+При $C=0$:
+ \[\frac{dv}{kv^2}=\frac{dt}{m}\Rightarrow-\frac{1}{kv}=\frac{t}{m}+C_2.\]
+При $t=0$ $v=v_0\Rightarrow C_2=-\frac{1}{kv_0}$. Тогда
+\[-\frac{1}{kv}=\frac{t}{m}-\frac{1}{kv_0}\Rightarrow-kv=\frac{1}{\frac{t}{m}-\frac{1}{kv_0}},\] 
+\[v(t)=-\frac{1}{k(\frac{t}{m}-\frac{1}{kv_0})}.\eqno(2.4.6)\]
+Для того, чтобы уменьшить количество неизвестных параметров, приведем решение к безразмерному виду:
+\[v^*(t^*)=-\frac{1}{At^*-1}.\]
+где $A$-безразмерный параметр ($A<1$).
+\begin{center}
+\picbox{5cm}{5cm}{0,5c0}{$A=\frac{1}{2}$} 
+\figcap[График решения]{}
+\end{center}
+\[H=-\frac{m}{k}\ln{\biggl{|}\frac{t}{m}-\frac{1}{kv_0}\biggr{|}}+C_3,\]
+При $t=0$ $H=H_0\Rightarrow C_3=H_0+\frac{m}{k}\ln{\biggl{|}-\frac{1}{kv_0}\biggr{|}}$. Тогда
+\[H=-\frac{m}{k}\ln{\biggl{|}\frac{t}{m}-\frac{1}{kv_0}\biggr{|}}+\frac{m}{k}\ln{\biggl{|}-\frac{1}{kv_0}\biggr{|}}+H_0=\frac{m}{k}\ln{\biggl{|}\frac{-\frac{1}{kv_0}}{\frac{t}{m}-\frac{1}{kv_0}}\biggr{|}}+H_0,\]
+\[H(t)=\frac{m}{k}\ln{\biggl{|}\frac{1}{1-\frac{kv_0t}{m}}\biggr{|}}+H_0.\eqno(2.4.7)\]
+Для того, чтобы уменьшить количество неизвестных параметров, приведем решение к безразмерному виду:
+\[H^*(t^*)=-A\ln{|1-Bt^*|}+1.\]
+где $B$-безразмерный параметр ($B<0$).
+\begin{center}
+\picbox{5cm}{5cm}{hc0}{$A=20,B=-0.2$} 
+\figcap[График решения]{}
+\end{center}
+\subsection{Решение при $n=2$ и с силой тяги}
+Теперь пусть $H\leqslant H_1\Rightarrow$ влючился ракетный двигатель, т.е. $P=P_0-aH$, то
+\[m\frac{dv}{dt}=C+kv^2-P_0+aH.\]
+Найдем $H(v)$:\\
+\[mv\frac{dv}{dH}=C+kv^2-P_0+aH\Rightarrow v\frac{dv}{dH}-\frac{k}{m}v^2=\frac{C-P_0}{m}+\frac{aH}{m}\text{ - уравнение Бернулли.}\]
+\[\text{Замена  }z=v^2\Rightarrow dz=2vdv\Rightarrow dv=\frac{dz}{2v},\]
+\[\frac{1}{2}\frac{dz}{dH}-\frac{k}{m}z=\frac{C-P_0}{m}+\frac{aH}{m},\]
+\[\frac{dz}{dH}-2\frac{k}{m}z=2\biggl{(}\frac{C-P_0}{m}+\frac{aH}{m}\biggr{)}\text{ - неоднородное уравнение,}\]
+\[1)\frac{dz}{dH}=2\frac{k}{m}z,\]
+\[\ln{z}=2\frac{k}{m}H+\ln{C_0}\Rightarrow z_0=C_0\exp{\biggl{(}2\frac{k}{m}H\biggr{)}}.\]
+\[2)C_0'\exp{\biggl{(}2\frac{k}{m}H\biggr{)}}+2\frac{k}{m}C_0\exp{\biggl{(}2\frac{k}{m}H\biggr{)}}-2\frac{k}{m}C_0\exp{\biggl{(}2\frac{k}{m}H\biggr{)}}=2\biggl{(}\frac{C-P_0}{m}+\frac{aH}{m}\biggr{)},\]
+\[C_0'=\frac{2}{m}(C-P_0+aH)\exp{\biggl{(}-2\frac{k}{m}H\biggr{)}},\]
+\[C_0=\frac{2}{m}(C-P_0+aH)\biggl{(}-\frac{m}{2k}\biggr{)}\exp{\biggl{(}-2\frac{k}{m}H\biggr{)}}+\frac{a}{k}\int{\exp{\biggl{(}-2\frac{k}{m}H\biggr{)}}}{dH},\]
+\[C_0=-\frac{C-P_0+aH}{k}\exp{\biggl{(}-2\frac{k}{m}H\biggr{)}}-\frac{am}{2k^2}\exp{\biggl{(}-2\frac{k}{m}H\biggr{)}}+C_1,\]
+\[z=(-\frac{C-P_0+aH}{k}\exp{\biggl{(}-2\frac{k}{m}H\biggr{)}}-\frac{am}{2k^2}\exp{\biggl{(}-2\frac{k}{m}H\biggr{)}}+C_1)\exp{\biggl{(}2\frac{k}{m}H\biggr{)}},\]
+\[v=\sqrt{-\frac{C-P_0+aH}{k}-\frac{am}{2k^2}+C_1\exp{\biggl{(}2\frac{k}{m}H\biggr{)}}},\]
+С помощью начальных условий при $H=H_1$ $v=v_1$ найдем неизвестное $C_1$:
+\[v_1^2=-\frac{C-P_0+aH_1}{k}-\frac{am}{2k^2}+C_1\exp{\biggl{(}2\frac{k}{m}H_1\biggr{)}}\Rightarrow C_1=(v_1^2+\frac{C-P_0+aH_1}{k}+\frac{am}{2k^2})\exp{\biggl{(}-2\frac{k}{m}H_1\biggr{)}},\]
+Тогда
+\[v(H)=\sqrt{-\frac{C-P_0+aH}{k}-\frac{am}{2k^2}+(v_1^2+\frac{C-P_0+aH_1}{k}+\frac{am}{2k^2})\exp{\biggl{(}-2\frac{k}{m}H_1\biggr{)}}\exp{\biggl{(}2\frac{k}{m}H\biggr{)}}},\]
+\[v(H)=\sqrt{-\frac{C-P_0+aH}{k}-\frac{am}{2k^2}+(v_1^2+\frac{C-P_0+aH_1}{k}+\frac{am}{2k^2})\exp{\biggl{(}2\frac{k}{m}(H-H_1)\biggr{)}}}.\eqno(2.5.1)\]
+Для того, чтобы уменьшить количество неизвестных параметров, приведем решение к безразмерному виду:
+\[\frac{v(H)}{v_1}=\sqrt{-\frac{C-P_0}{kv_1^2}-\frac{am}{2k^2v_1^2}-\frac{aH}{kv_1^2}\frac{H_1}{H_1}+\biggl{(}1+\frac{C-P_0}{kv_1^2}+\frac{am}{2k^2v_1^2}+\frac{aH_1}{kv_1^2}\biggr{)}\exp{\biggl{(}2\frac{k}{m}H_1(\frac{H}{H_1}-1)\biggr{)}}},\]
+\[v^*(H^*)=\sqrt{-(A+BH^*)+(1+A+B)\exp{(D(H^*-1))}}.\]
+где $H^*=\frac{H}{H_1};v^*=\frac{v}{v_1};A=\frac{C-P_0}{kv_1^2}+\frac{am}{2k^2v_1^2};B=\frac{aH_1}{kv_1^2};D=2\frac{k}{m}H_1.$
+\\Рассмотрим графики решения при различных значениях параметров:
+\begin{center}
+\picbox{5cm}{5cm}{Untitled-1}{$A=-20,B=2,D=0.2$} 
+\picbox{5cm}{5cm}{Untitled-3}{$A=-0.5,B=0.5,D=20$} 
+\end{center}
+\begin{center}
+\picbox{5cm}{5cm}{Untitled-2}{$A=20,B=20,D=2$} 
+\picbox{5cm}{5cm}{Untitled-4}{$A=-0.5,B=0.5,D=0.2$} 
+\figcap[Графики решения]{}
+\end{center}
+\subsection{Численное решение при $n=7/4$ и отсутствии силы тяги}
+Пусть $n=7/4$, $H_1\leqslant H\leqslant H_0\Rightarrow$ ракетный двигатель выключен, т.е. $P\equiv 0$, тогда $m\frac{dv}{dt}=C+kv^\frac{7}{4}$.
+Для получения численного решения воспользуемся пакетом Wolfram Mathematica.
+\\Рассмотрим графики решения при различных значениях параметров.
+\\Зависимость $v(t)$ с начальной скоростью $v_0=10$(м/c):
+\begin{center}
+\picbox{5cm}{5cm}{chc+}{$mg>F_\text{арх}(C>0)$} 
+\picbox{5cm}{5cm}{chc-}{$mg<F_\text{арх}(C<0)$} 
+\figcap[Графики решения]{}
+\end{center}
+Зависимость $H(t)$ с начальной скоростью $v_0=10$ (м/c),и глубиной $H_0=100$ (м): 
+\begin{center}
+\picbox{5cm}{5cm}{cvc+}{$mg>F_\text{арх}(C>0)$} 
+\picbox{5cm}{5cm}{cvc-}{$mg<F_\text{арх}(C<0)$} 
+\figcap[Графики решения]{}
+\end{center}
+Зависимость $H(v)$  с начальной скоростью $v_0=10$ (м/c),и глубиной $H_0=100$ (м):
+\begin{center}
+\picbox{5cm}{5cm}{chvc+}{$mg>F_\text{арх}(C>0)$} 
+\picbox{5cm}{5cm}{chvc-}{$mg<F_\text{арх}(C<0)$} 
+\figcap[Графики решения]{}
+\end{center}
+\subsection{Численное решение при $n=7/4$ и с силой тяги}
+Теперь пусть $H\leqslant H_1\Rightarrow$ влючился ракетный двигатель, т.е. $P=P_0-aH$, тогда
+\[m\frac{dv}{dt}=C+kv^\frac{7}{4}-P_0+aH.\]
+Рассмотрим графики решения при различных значениях параметров.
+Зависимость $H(t)$ при $t_1=1$(с), $v_1=5$ (м/c), $H_1=90$ (м): 
+\begin{center}
+\picbox{5cm}{5cm}{chcp+}{$mg>F_\text{арх}(C>0)$} 
+\picbox{5cm}{5cm}{chcp-}{$mg<F_\text{арх}(C<0)$} 
+\figcap[Графики решения]{}
+\end{center}
+Зависимость $v(h)$ при $t_1=1$(с), $v_1=5$ (м/c), $H_1=90$ (м): 
+\begin{center}
+\picbox{5cm}{5cm}{CVHC+}{$mg>F_\text{арх}(C>0)$} 
+\picbox{5cm}{5cm}{CVHC-}{$mg<F_\text{арх}(C<0)$} 
+\figcap[Графики решения]{}
+\end{center}
+\section-{Заключение}
+В работе была построена математическая модель вертикального движения баллистической ракеты. Разобраны частные случаи построеной модели и для каждого случая получено точное аналитическое решение и проведено его исследование. Проведен численый анализ этой модели при $n=7/4$. 
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{$P\equiv 0$} \\
+\hline
+$n$&$1$&$7/4$&$2$\\
+\hline  
+$v\text{(м/c)}$&$90.56$&$93.61$&$95.05$\\
+\hline
+$H\text{(м)}$&$102.48$&$103.21$&$104.80$\\
+\hline
+\multicolumn{4}{r}{\textit{Таблица $1$}}\\
+\end{tabular}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\multicolumn{4}{|c|}{$P=P_0-aH$}\\
+\hline
+$n$&$1$&$7/4$&$2$\\
+\hline  
+$v\text{(м/c)}$&$97.57$&$96.27$&$93.46$\\
+\hline
+$H\text{(м)}$&$6.18$&$6.84$&$8.24$\\
+\hline
+\multicolumn{4}{r}{\textit{Таблица $2$}}\\
+\end{tabular}
+\end{center}
+
+Из таблиц 1,2 заметим, что при изменении параметра $n$ скорость ракеты изменяется нелинейно как с силой тяги, так и без неё. (В качестве остальных параметров были взяты: $m=20000$(кг), $V=10\text{(м}^3)$, $v_0=100$(м/c), $v_1=90$(м/c), $H_0=200$(м), $H_1=100$(м), $P_0=250000$(Н), $a=25$, $k=10$, а вычисления текущего значения глубины и скорости для таблиц 1,2 были проведены для моментов времени $t_1=1$(с), $t_2=3$(с) соответственно)
+\begin{thebibliography}{9}
+\bibitem{1} Агафонов С.А., Герман А.Д., Муратова Т.В. Дифференциальные уравнения: Учеб. для вузов. 2-е изд. / Под ред. В.С. Зарубина, А.П. Крищенко. М.: Изд-во МГТУ им. Н.Э. Баумана, 2000. 348 с. (Сер. Математика в техническом университете. Вып. VIII).
+\bibitem{2} Пономарев К.К. Составление и решение дифференциальных уравнений инженерно-технических задач. М.: Учпедгиз, 1962. 184 с.
+\end{thebibliography}
+
+\end{document}

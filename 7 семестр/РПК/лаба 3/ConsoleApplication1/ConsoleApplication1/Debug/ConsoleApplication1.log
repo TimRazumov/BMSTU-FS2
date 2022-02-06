@@ -1,0 +1,8 @@
+﻿  Source.cpp
+c:\users\тимофей\desktop\bmstu\7 семестр\рпк\лаба 3\consoleapplication1\consoleapplication1\source.cpp(85): warning C4018: <: несоответствие типов со знаком и без знака
+c:\users\тимофей\desktop\bmstu\7 семестр\рпк\лаба 3\consoleapplication1\consoleapplication1\source.cpp(94): warning C4018: <: несоответствие типов со знаком и без знака
+c:\users\тимофей\desktop\bmstu\7 семестр\рпк\лаба 3\consoleapplication1\consoleapplication1\source.cpp(112): warning C4018: <: несоответствие типов со знаком и без знака
+c:\users\тимофей\desktop\bmstu\7 семестр\рпк\лаба 3\consoleapplication1\consoleapplication1\source.cpp(130): warning C4018: <: несоответствие типов со знаком и без знака
+c:\users\тимофей\desktop\bmstu\7 семестр\рпк\лаба 3\consoleapplication1\consoleapplication1\source.cpp(143): warning C4018: <: несоответствие типов со знаком и без знака
+  ConsoleApplication1.vcxproj -> C:\Users\тимофей\Desktop\BMSTU\7 семестр\РПК\лаба 3\ConsoleApplication1\Debug\ConsoleApplication1.exe
+  ConsoleApplication1.vcxproj -> C:\Users\тимофей\Desktop\BMSTU\7 семестр\РПК\лаба 3\ConsoleApplication1\Debug\ConsoleApplication1.pdb (Partial PDB)

@@ -1,0 +1,8 @@
+﻿  hw.cpp
+LINK : warning LNK4075: не учитывается "/INCREMENTAL" из-за спецификации "/LTCG"
+  Создание кода
+  2 of 145 functions ( 1.4%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    17 functions had inline decision re-evaluated but remain unchanged
+  Создание кода завершено
+  hw.vcxproj -> C:\Users\тимофей\Desktop\BMSTU\7 семестр\Параллельное программирование\Helmholtz_MPI\helloworld\hw\Release\hw.exe
